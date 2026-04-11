@@ -1,0 +1,26 @@
+# Definition of Done — Website Deliverable
+
+- **Mobile-friendly** — fully responsive across all screen sizes (mobile, tablet, desktop)
+- **Blazing fast / no lag** — the page must feel instant with zero jank. Apply these React & Next.js performance best practices:
+  - **Server Components by default** — only add `"use client"` for event handlers, browser APIs, useState/useEffect, animations. Push it as far down the tree as possible.
+  - **Small components with isolated state** — a component that owns state re-renders only itself. Extract "islands of interactivity" into small client components; keep wrappers as Server Components.
+  - **Lazy load heavy components** — use `next/dynamic` with `ssr: false` for modals, charts, editors, and below-the-fold widgets. Wrap route segments in `<Suspense>` to stream partial HTML.
+  - **Memoize where it matters** — use `React.memo` on leaf components that receive stable props but render often. Use `useMemo`/`useCallback` only for expensive derivations, not trivial values. Never define objects/arrays/functions inline in JSX props of memoized children.
+  - **Images with `next/image`** — automatic WebP/AVIF, responsive srcset, lazy loading. Set explicit width/height to prevent CLS. Use `priority` only on above-the-fold LCP images.
+  - **Fonts with `next/font`** — self-hosted, preloaded, zero layout shift, zero external requests.
+  - **Third-party scripts via `next/script`** — use `strategy="lazyOnload"` for analytics/chat, `strategy="afterInteractive"` for tag managers. Never raw `<script>` tags.
+  - **CSS transitions only on `transform`/`opacity`** — never animate `width`, `height`, `top`, `left`. Avoid `will-change` on more than a few elements.
+  - **Use `useTransition`/`useDeferredValue`** for non-urgent state updates to keep the UI responsive.
+  - **Bundle size** — audit with `@next/bundle-analyzer`, use named imports (not full library imports), target < 100KB JS per route chunk.
+- **SEO optimized** — proper meta tags, headings structure, sitemap, and semantic HTML
+- **Images optimized** — compressed, correctly sized, with alt text on all images
+- **AEO optimized** — structured data / schema markup in place, content formatted for AI-driven answer engines
+- **Bilingual** — both language versions fully functional, with correct routing/switching and no missing translations
+- **Consistent color palette** — all UI elements follow the agreed brand colors throughout
+- **Button consistency** — all buttons share unified style, sizing, and hover behavior across all pages
+- **Footer** — present on all pages, includes "Made by Hexaigon" credit to the left of it use the https://lucide.dev/icons/hexagon from the library we have and make it primary color.
+- **Open Graph image** — OG share image is a 1920x1080 screenshot of the website, used as the preview when sharing on social media
+- **Favicon** — a `.ico` remove the vercel default one and make one using sharp based on logo png. and use this as favicon.ico
+- **Navbar links work across ALL pages** — Use proper `Link` from `@/lib/i18n/navigation` with absolute paths (e.g., `href="/blog"`, `href="/#about"`). Never use bare `#section` anchors — they break on non-landing pages because they append `#section` to the current URL instead of navigating to `/#section`. Same-page anchors are only valid on the landing page; everywhere else, prefix with `/`. Verify by clicking every nav link from at least two different pages.
+- **Every route group has a `loading.tsx`** — Use the reusable `LoadingScreen` component (`components/loading-screen.tsx`) which matches the app theme. When adding a new route group or page directory, always create a `loading.tsx` that imports and renders `<LoadingScreen />`.
+- **No unused code or assets** — Remove any unused components, imports, images, fonts, and dependencies before shipping. Run `pnpm tsc --noEmit` and `pnpm lint` to catch dead imports. Check `public/images/` for orphaned files not referenced anywhere. Delete example/placeholder components that aren't part of the final site.
