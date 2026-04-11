@@ -38,7 +38,8 @@ export const authOptions: NextAuthOptions = {
           return true;
         } catch (error) {
           console.error("Error saving user to database:", error);
-          return false;
+          // Don't block sign-in if DB save fails
+          return true;
         }
       }
       return true;
@@ -62,10 +63,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
   },
-  pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
-  },
+  pages: {},
   secret: process.env.NEXTAUTH_SECRET,
 };
 

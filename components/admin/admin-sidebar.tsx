@@ -1,7 +1,9 @@
 "use client";
 
-import { ChevronsUpDown, Command, Home, LogOut } from "lucide-react";
+import { Building2, ChevronsUpDown, Globe, Home, LogOut, Moon, Sun } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { signOut, useSession } from "next-auth/react";
+import { useTheme } from "next-themes";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -23,16 +25,25 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuBadge,
   SidebarRail,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { adminNavItems } from "@/lib/admin/config";
-import { Link, usePathname } from "@/lib/i18n/navigation";
+import { Link, usePathname, useRouter } from "@/lib/i18n/navigation";
 
 export const AdminSidebar = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const locale = useLocale();
   const { setOpenMobile, isMobile } = useSidebar();
   const { data: session } = useSession();
+  const { theme, setTheme } = useTheme();
+  const t = useTranslations("Admin.nav");
+
+  const switchLocale = (newLocale: string) => {
+    router.replace(pathname, { locale: newLocale });
+  };
 
   const userName = session?.user?.name || "Admin User";
   const userEmail = session?.user?.email || "admin@example.com";
@@ -52,11 +63,11 @@ export const AdminSidebar = () => {
             <SidebarMenuButton size="lg" asChild>
               <Link href="/admin" onClick={() => setOpenMobile(false)}>
                 <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Command className="size-4" />
+                  <Building2 className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Admin Panel</span>
-                  <span className="truncate text-xs">Dashboard</span>
+                  <span className="truncate font-semibold">Xenia</span>
+                  <span className="truncate text-xs">Host Dashboard</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -67,7 +78,7 @@ export const AdminSidebar = () => {
       <SidebarContent>
         {Object.entries(adminNavItems).map(([group, buttons]) => (
           <SidebarGroup key={group}>
-            <SidebarGroupLabel>{group}</SidebarGroupLabel>
+            <SidebarGroupLabel>{t(`sections.${group.toLowerCase()}`)}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {buttons.map((button) => {
@@ -80,13 +91,18 @@ export const AdminSidebar = () => {
                       <SidebarMenuButton
                         asChild
                         isActive={active}
-                        tooltip={button.label}
+                        tooltip={t(button.href)}
                       >
                         <Link href={href} onClick={() => setOpenMobile(false)}>
                           <button.icon className="size-4" />
-                          <span>{button.label}</span>
+                          <span>{t(button.href)}</span>
                         </Link>
                       </SidebarMenuButton>
+                      {button.badge && (
+                        <SidebarMenuBadge className="text-[10px] text-muted-foreground">
+                          {button.badge === "soon" ? "Soon" : button.badge}
+                        </SidebarMenuBadge>
+                      )}
                     </SidebarMenuItem>
                   );
                 })}
@@ -142,7 +158,26 @@ export const AdminSidebar = () => {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
+                <DropdownMenuItem
+                  onClick={() => switchLocale(locale === "en" ? "el" : "en")}
+                  className="cursor-pointer"
+                >
+                  <Globe className="size-4" />
+                  {locale === "en" ? "Ελληνικά" : "English"}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="cursor-pointer"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="size-4" />
+                  ) : (
+                    <Moon className="size-4" />
+                  )}
+                  {theme === "dark" ? "Light mode" : "Dark mode"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
                   <LogOut className="size-4" />
                   Sign out
                 </DropdownMenuItem>

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 model User {
@@ -19,6 +19,7 @@ model User {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   todos         Todo[]
+  properties    Property[]
 
   @@map("users")
 }
@@ -36,4 +37,67 @@ model Todo {
 
   @@index([userId])
   @@map("todos")
+}
+
+model Property {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  address        String?
+  city           String?
+  country        String   @default("Greece")
+
+  // Guest-facing info
+  wifiName       String?  @map("wifi_name")
+  wifiPassword   String?  @map("wifi_password")
+  checkInTime    String?  @default("15:00") @map("check_in_time")
+  checkOutTime   String?  @default("11:00") @map("check_out_time")
+  houseRules     String?  @map("house_rules")
+  description    String?
+  localTips      String?  @map("local_tips")
+  emergencyPhone String?  @map("emergency_phone")
+
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  hostId         String   @map("host_id")
+  host           User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  reservations   Reservation[]
+
+  @@index([hostId])
+  @@index([slug])
+  @@map("properties")
+}
+
+model Reservation {
+  id               String   @id @default(cuid())
+  guestName        String   @map("guest_name")
+  guestEmail       String?  @map("guest_email")
+  guestPhone       String?  @map("guest_phone")
+  guestNationality String?  @map("guest_nationality")
+  guestLanguage    String?  @default("en") @map("guest_language")
+  numberOfGuests   Int      @default(1) @map("number_of_guests")
+
+  checkIn          DateTime @map("check_in")
+  checkOut         DateTime @map("check_out")
+  specialRequests  String?  @map("special_requests")
+
+  source           String   @default("direct")
+  externalId       String?  @map("external_id")
+  status           String   @default("confirmed")
+
+  guestToken       String   @unique @default(cuid()) @map("guest_token")
+
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  propertyId       String   @map("property_id")
+  property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([checkIn])
+  @@index([checkOut])
+  @@index([guestToken])
+  @@map("reservations")
 }
