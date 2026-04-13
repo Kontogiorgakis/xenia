@@ -34,7 +34,91 @@
     },
     "settings": {
       "title": "Settings",
-      "description": "Manage your application preferences and configuration."
+      "description": "Manage your application preferences and configuration.",
+      "sections": {
+        "profile": "Profile",
+        "platforms": "Connected Platforms",
+        "notifications": "Notifications",
+        "billing": "Subscription & Billing"
+      },
+      "profile": {
+        "title": "Your profile",
+        "subtitle": "This information appears on your guests' personal pages",
+        "photo": "Profile photo",
+        "changePhoto": "Change photo",
+        "fullName": "Full name",
+        "displayName": "Display name",
+        "displayNameHint": "How guests see your name",
+        "email": "Email",
+        "emailHint": "Managed via Google account",
+        "phone": "Phone number",
+        "bio": "About you",
+        "bioHint": "Write a short welcome message for your guests",
+        "bioPlaceholder": "Hi! I'm Nikos, born and raised in Elounda. I love helping guests discover the real Crete!",
+        "save": "Save changes",
+        "saved": "Profile saved"
+      },
+      "platforms": {
+        "title": "Connected platforms",
+        "subtitle": "Connect your booking platforms to sync reservations automatically",
+        "connected": "Connected",
+        "notConnected": "Not connected",
+        "active": "Active",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "directBooking": "Direct Booking",
+        "directBookingDesc": "Accept direct bookings from your own website or in person",
+        "directLinkHint": "Share this link to accept direct bookings for free",
+        "copyLink": "Copy link",
+        "upgradeBanner": "Booking.com and Airbnb sync are available on the Pro plan.",
+        "upgradeCta": "Upgrade to Pro",
+        "bookingDesc": "Sync reservations automatically when guests book on Booking.com",
+        "airbnbDesc": "Import your Airbnb reservations via iCal calendar sync",
+        "whatsappDesc": "Receive and reply to guest WhatsApp messages directly in your Xenia inbox"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "subtitle": "Choose what you want to be notified about",
+        "email": "Email",
+        "push": "Push",
+        "save": "Save preferences",
+        "saved": "Preferences saved",
+        "types": {
+          "newReservation": "New reservation",
+          "newReservationDesc": "When a new booking is confirmed on any platform",
+          "guestArriving": "Guest arriving today",
+          "guestArrivingDesc": "Morning reminder for guests checking in today",
+          "guestMessage": "Guest message received",
+          "guestMessageDesc": "When a guest sends you a message through Xenia",
+          "issueReported": "Issue reported",
+          "issueReportedDesc": "When a guest reports a problem at your property",
+          "checkoutReminder": "Checkout reminder",
+          "checkoutReminderDesc": "Evening reminder for guests checking out tomorrow",
+          "aiCantAnswer": "AI couldn't answer",
+          "aiCantAnswerDesc": "When the AI was unable to answer a guest's question",
+          "reviewReceived": "Review received",
+          "reviewReceivedDesc": "When a guest leaves a review"
+        }
+      },
+      "billing": {
+        "title": "Subscription & Billing",
+        "currentPlan": "Current plan",
+        "betaNotice": "You're on the free beta plan. All features are free while we build together. Billing will be introduced soon.",
+        "plans": {
+          "starter": "Starter",
+          "pro": "Pro",
+          "agency": "Agency",
+          "recommended": "Recommended",
+          "perMonth": "/ month",
+          "upgrade": "Upgrade",
+          "current": "Current plan",
+          "comingSoon": "Billing coming soon — you're on the free beta plan!"
+        },
+        "invoices": {
+          "title": "Billing history",
+          "empty": "No invoices yet — you're on the free beta plan"
+        }
+      }
     },
     "expenses": {
       "title": "Expenses",
@@ -64,7 +148,7 @@
     },
     "properties": {
       "title": "Properties",
-      "description": "Manage your properties and accommodations.",
+      "pageDescription": "Manage your properties and accommodations.",
       "addProperty": "Add Property",
       "editProperty": "Edit Property",
       "name": "Property name",
@@ -101,6 +185,104 @@
       "activeReservations": "active reservations",
       "save": "Save Property",
       "saving": "Saving..."
+    },
+    "locations": {
+      "title": "Properties",
+      "pageDescription": "Manage your locations and properties",
+      "addLocation": "Add location",
+      "addProperty": "Add property",
+      "addStandalone": "Add standalone property",
+      "standalone": "Standalone properties",
+      "noLocations": "No properties yet",
+      "noLocationsHint": "Add your first location or standalone property to get started",
+      "editLocation": "Edit location",
+      "viewContacts": "Contacts",
+      "properties": "properties",
+      "activeGuests": "active guests",
+      "created": "Location created successfully",
+      "updated": "Location updated successfully",
+      "deleted": "Location deleted successfully",
+      "save": "Save location",
+      "saving": "Saving...",
+      "tabs": {
+        "basic": "Basic info",
+        "amenities": "Amenities",
+        "rules": "Rules & access",
+        "contacts": "Contacts"
+      },
+      "basic": {
+        "name": "Location name",
+        "namePlaceholder": "e.g. Kostas Complex",
+        "address": "Address",
+        "city": "City",
+        "country": "Country",
+        "guestUrl": "Guest URL preview"
+      },
+      "amenities": {
+        "title": "Shared amenities",
+        "subtitle": "These apply to all apartments in this location",
+        "add": "Add amenity",
+        "quickAdd": "Quick add",
+        "category": "Category",
+        "name": "Name",
+        "hours": "Hours",
+        "hoursPlaceholder": "e.g. 09:00 – 17:00",
+        "notes": "Notes",
+        "notesPlaceholder": "e.g. Children must be supervised",
+        "noAmenities": "No amenities added yet",
+        "categories": {
+          "pool": "Pool",
+          "parking": "Parking",
+          "garden": "Garden / Outdoor",
+          "bbq": "BBQ",
+          "gym": "Gym",
+          "spa": "Spa",
+          "laundry": "Laundry",
+          "reception": "Reception",
+          "restaurant": "Restaurant",
+          "other": "Other"
+        }
+      },
+      "rules": {
+        "title": "Rules & access",
+        "quietHours": "Quiet hours",
+        "quietStart": "From",
+        "quietEnd": "Until",
+        "access": "Access information",
+        "gateCode": "Gate / entrance code",
+        "parkingInfo": "Parking instructions",
+        "buildingAccess": "Building access instructions",
+        "buildingAccessPlaceholder": "e.g. Main entrance on the left side of the building",
+        "houseRules": "House rules",
+        "addRule": "Add rule",
+        "quickAdd": "Quick add",
+        "rulePlaceholder": "e.g. No smoking anywhere on the premises",
+        "noRules": "No rules added yet"
+      },
+      "contacts": {
+        "title": "Important contacts",
+        "subtitle": "These appear on your guests' pages and the AI uses them to help guests",
+        "add": "Add contact",
+        "suggestions": "Quick add suggestions",
+        "category": "Category",
+        "name": "Name",
+        "namePlaceholder": "e.g. Local taxi — Petros",
+        "phone": "Phone number",
+        "notes": "Notes",
+        "notesPlaceholder": "e.g. Available 24/7",
+        "noContacts": "No contacts added yet",
+        "created": "Contact added",
+        "deleted": "Contact deleted",
+        "categories": {
+          "emergency": "Emergency",
+          "medical": "Medical",
+          "transport": "Transport",
+          "food": "Food delivery",
+          "services": "Services",
+          "pharmacy": "Pharmacy",
+          "other": "Other"
+        }
+      }
     },
     "reservations": {
       "title": "Reservations",
@@ -142,6 +324,8 @@
       "linkCopied": "Link copied!",
       "sendWhatsapp": "Send via WhatsApp",
       "created": "Reservation created successfully",
+      "updated": "Reservation updated successfully",
+      "editReservation": "Edit Reservation",
       "noReservations": "No reservations yet",
       "addFirst": "Add your first reservation to get started",
       "save": "Save Reservation",

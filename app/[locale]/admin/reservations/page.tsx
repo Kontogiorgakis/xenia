@@ -1,4 +1,4 @@
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays, Edit, Plus } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Badge } from "@/components/ui/badge";
@@ -165,6 +165,7 @@ const ReservationsPage = async ({
                     {t("source")}
                   </TableHead>
                   <TableHead>{t("status")}</TableHead>
+                  <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -199,6 +200,13 @@ const ReservationsPage = async ({
                       <Badge variant={getStatusVariant(r.status)}>
                         {t(`statuses.${r.status as "confirmed" | "active" | "completed" | "cancelled"}`)}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Button asChild variant="ghost" size="icon" className="cursor-pointer">
+                        <Link href={`/admin/reservations/${r.id}`}>
+                          <Edit className="size-4" />
+                        </Link>
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

@@ -114,7 +114,6 @@ export function PropertyForm({ initialData }: PropertyFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-6">
-      {/* Basic Info */}
       <Card>
         <CardHeader>
           <CardTitle>{t("basicInfo")}</CardTitle>
@@ -166,7 +165,6 @@ export function PropertyForm({ initialData }: PropertyFormProps) {
         </CardContent>
       </Card>
 
-      {/* Guest Info */}
       <Card>
         <CardHeader>
           <CardTitle>{t("guestInfo")}</CardTitle>
@@ -244,7 +242,6 @@ export function PropertyForm({ initialData }: PropertyFormProps) {
         </CardContent>
       </Card>
 
-      {/* Local Tips */}
       <Card>
         <CardHeader>
           <CardTitle>{t("localTips")}</CardTitle>
@@ -263,7 +260,6 @@ export function PropertyForm({ initialData }: PropertyFormProps) {
         </CardContent>
       </Card>
 
-      {/* Emergency Contacts */}
       <Card>
         <CardHeader>
           <CardTitle>{t("emergencyContacts")}</CardTitle>

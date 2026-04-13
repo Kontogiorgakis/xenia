@@ -29,6 +29,28 @@ export const getReservations = async (propertyId?: string) => {
   }
 };
 
+export const getReservationById = async (id: string) => {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id)
+    return { success: false, error: "Unauthorized", reservation: null };
+
+  try {
+    const reservation = await prisma.reservation.findFirst({
+      where: { id, property: { hostId: session.user.id } },
+      include: { property: { select: { name: true, id: true } } },
+    });
+
+    if (!reservation)
+      return { success: false, error: "Reservation not found", reservation: null };
+
+    return { success: true, reservation };
+  } catch (error) {
+    console.error("Error fetching reservation:", error);
+    return { success: false, error: "Failed to fetch reservation", reservation: null };
+  }
+};
+
 export const getReservationByToken = async (token: string) => {
   try {
     const reservation = await prisma.reservation.findUnique({

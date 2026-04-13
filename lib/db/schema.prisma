@@ -15,11 +15,17 @@ model User {
   name          String?
   image         String?
   emailVerified DateTime? @map("email_verified")
+  displayName   String?   @map("display_name")
+  phone         String?
+  bio           String?
+  avatarUrl     String?   @map("avatar_url")
+  notificationPrefs String? @default("{}") @map("notification_prefs")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   todos         Todo[]
   properties    Property[]
+  locations     Location[]
 
   @@map("users")
 }
@@ -63,9 +69,13 @@ model Property {
   hostId         String   @map("host_id")
   host           User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
 
+  locationId     String?  @map("location_id")
+  location       Location? @relation(fields: [locationId], references: [id])
+
   reservations   Reservation[]
 
   @@index([hostId])
+  @@index([locationId])
   @@index([slug])
   @@map("properties")
 }
@@ -100,4 +110,54 @@ model Reservation {
   @@index([checkOut])
   @@index([guestToken])
   @@map("reservations")
+}
+
+model Location {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  address         String?
+  city            String?
+  country         String   @default("Greece")
+
+  amenities       String?  @default("[]")
+  rules           String?  @default("[]")
+
+  gateCode        String?  @map("gate_code")
+  parkingInfo     String?  @map("parking_info")
+  buildingAccess  String?  @map("building_access")
+  quietHoursStart String?  @default("23:00") @map("quiet_hours_start")
+  quietHoursEnd   String?  @default("08:00") @map("quiet_hours_end")
+
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  hostId          String   @map("host_id")
+  host            User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
+
+  properties      Property[]
+  contacts        Contact[]
+
+  @@index([hostId])
+  @@index([slug])
+  @@map("locations")
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  category    String
+  name        String
+  phone       String
+  notes       String?
+  icon        String?
+  displayOrder Int     @default(0) @map("display_order")
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  locationId  String   @map("location_id")
+  location    Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([locationId])
+  @@map("contacts")
 }

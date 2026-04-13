@@ -43,68 +43,135 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Xenia brand colors */
+  --color-xenia-deep: var(--xenia-deep);
+  --color-xenia-sea: var(--xenia-sea);
+  --color-xenia-teal: var(--xenia-teal);
+  --color-xenia-teal-soft: var(--xenia-teal-soft);
+  --color-xenia-sunset: var(--xenia-sunset);
+  --color-xenia-sunset-light: var(--xenia-sunset-light);
+  --color-xenia-amber: var(--xenia-amber);
+  --color-xenia-on-brand: var(--xenia-on-brand);
+
+  /* Xenia surface tones */
+  --color-xenia-surface: var(--xenia-surface);
+  --color-xenia-surface-low: var(--xenia-surface-low);
+  --color-xenia-surface-high: var(--xenia-surface-high);
+  --color-xenia-surface-variant: var(--xenia-surface-variant);
+  --color-xenia-on-surface: var(--xenia-on-surface);
+  --color-xenia-outline: var(--xenia-outline);
 }
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
 
-  --sidebar: var(--background);
-  --sidebar-foreground: var(--foreground);
-  --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--accent);
-  --sidebar-accent-foreground: var(--accent-foreground);
-  --sidebar-border: var(--border);
-  --sidebar-ring: var(--ring);
+  /* shadcn base — neutral background, Xenia accents */
+  --background: #ffffff;
+  --foreground: #191c1d;
+  --card: #ffffff;
+  --card-foreground: #191c1d;
+  --popover: #ffffff;
+  --popover-foreground: #191c1d;
+  --primary: #00426d;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f4f5;
+  --secondary-foreground: #191c1d;
+  --muted: #f3f4f5;
+  --muted-foreground: #5f6368;
+  --accent: #f3f4f5;
+  --accent-foreground: #191c1d;
+  --destructive: #c62828;
+  --border: rgb(193 199 209 / 15%);
+  --input: rgb(193 199 209 / 25%);
+  --ring: #005a92;
+  --chart-1: #00426d;
+  --chart-2: #006970;
+  --chart-3: #884400;
+  --chart-4: #005a92;
+  --chart-5: #653100;
+
+  /* Xenia brand */
+  --xenia-deep: #00426d;
+  --xenia-sea: #005a92;
+  --xenia-teal: #006970;
+  --xenia-teal-soft: #e0f2f1;
+  --xenia-sunset: #653100;
+  --xenia-sunset-light: #ffdcc5;
+  --xenia-amber: #884400;
+  --xenia-on-brand: #ffffff;
+
+  /* Xenia surfaces (tonal layers — no borders needed) */
+  --xenia-surface: #f8f9fa;
+  --xenia-surface-low: #f3f4f5;
+  --xenia-surface-high: #e1e3e4;
+  --xenia-surface-variant: #eef0f2;
+  --xenia-on-surface: #191c1d;
+  --xenia-outline: rgb(193 199 209 / 15%);
+
+  /* Sidebar — neutral */
+  --sidebar: #f8f9fa;
+  --sidebar-foreground: #191c1d;
+  --sidebar-primary: #00426d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f3f4f5;
+  --sidebar-accent-foreground: #191c1d;
+  --sidebar-border: rgb(193 199 209 / 15%);
+  --sidebar-ring: #005a92;
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.14 0.04 259.21);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --background: #111418;
+  --foreground: #e2e4e6;
+  --card: #1a1d21;
+  --card-foreground: #e2e4e6;
+  --popover: #1a1d21;
+  --popover-foreground: #e2e4e6;
+  --primary: #7ec8f0;
+  --primary-foreground: #00344f;
+  --secondary: #252a2e;
+  --secondary-foreground: #e2e4e6;
+  --muted: #252a2e;
+  --muted-foreground: #9aa0a6;
+  --accent: #252a2e;
+  --accent-foreground: #e2e4e6;
+  --destructive: #ef5350;
+  --border: rgb(255 255 255 / 8%);
+  --input: rgb(255 255 255 / 12%);
+  --ring: #7ec8f0;
+  --chart-1: #7ec8f0;
+  --chart-2: #4db6ac;
+  --chart-3: #ffb74d;
+  --chart-4: #90caf9;
+  --chart-5: #ff8a65;
+
+  /* Xenia brand — dark mode */
+  --xenia-deep: #7ec8f0;
+  --xenia-sea: #90caf9;
+  --xenia-teal: #4db6ac;
+  --xenia-teal-soft: #1a2e2d;
+  --xenia-sunset: #ffb74d;
+  --xenia-sunset-light: #3d2800;
+  --xenia-amber: #ffa726;
+  --xenia-on-brand: #111418;
+
+  /* Xenia surfaces — dark tonal layers */
+  --xenia-surface: #111418;
+  --xenia-surface-low: #1a1d21;
+  --xenia-surface-high: #252a2e;
+  --xenia-surface-variant: #1e2226;
+  --xenia-on-surface: #e2e4e6;
+  --xenia-outline: rgb(255 255 255 / 8%);
+
+  /* Sidebar — dark neutral */
+  --sidebar: #1a1d21;
+  --sidebar-foreground: #e2e4e6;
+  --sidebar-primary: #7ec8f0;
+  --sidebar-primary-foreground: #00344f;
+  --sidebar-accent: #252a2e;
+  --sidebar-accent-foreground: #e2e4e6;
+  --sidebar-border: rgb(255 255 255 / 8%);
+  --sidebar-ring: #7ec8f0;
 }
 
 /* ── Prevent layout shift when Radix dialogs open ──
@@ -131,5 +198,34 @@ html body[data-scroll-locked] {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* ── Xenia ambient shadows ── */
+@layer utilities {
+  .shadow-xenia {
+    box-shadow: 0 8px 32px rgb(25 28 29 / 4%);
+  }
+  .shadow-xenia-md {
+    box-shadow: 0 8px 48px rgb(25 28 29 / 6%);
+  }
+  .shadow-xenia-lg {
+    box-shadow: 0 12px 48px rgb(25 28 29 / 8%);
+  }
+  .glass-xenia {
+    background: rgb(255 255 255 / 75%);
+    backdrop-filter: blur(20px);
+  }
+  .dark .glass-xenia {
+    background: rgb(26 29 33 / 75%);
+  }
+  .gradient-xenia {
+    background: linear-gradient(135deg, #00426d, #005a92);
+  }
+  .dark .gradient-xenia {
+    background: linear-gradient(135deg, #1a2d44, #005a92);
+  }
+  .gradient-xenia-warm {
+    background: linear-gradient(135deg, #653100, #884400);
   }
 }

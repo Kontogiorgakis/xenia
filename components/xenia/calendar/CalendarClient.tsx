@@ -255,7 +255,7 @@ export function CalendarClient({ events, properties }: CalendarClientProps) {
         open={!!selectedEvent}
         onOpenChange={(open) => !open && setSelectedEvent(null)}
       >
-        <SheetContent className="overflow-y-auto">
+        <SheetContent className="overflow-y-auto sm:max-w-md">
           {selectedResource && (() => {
             const sourceColor = getSourceColor(selectedResource.source);
             return (
@@ -281,90 +281,92 @@ export function CalendarClient({ events, properties }: CalendarClientProps) {
                 )}
               </SheetHeader>
 
-              <Separator className="my-4" />
+              <div className="space-y-6 px-4 pb-4">
+                <Separator />
 
-              <div className="space-y-3">
-                <DetailRow
-                  label="Property"
-                  value={selectedResource.propertyName}
-                />
-                <DetailRow
-                  label="Check-in"
-                  value={selectedEvent!.start.toLocaleDateString(undefined, {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                />
-                <DetailRow
-                  label="Check-out"
-                  value={selectedEvent!.end.toLocaleDateString(undefined, {
-                    weekday: "short",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                />
-                <DetailRow
-                  label="Duration"
-                  value={`${nights} ${t("nights")}`}
-                />
-                <DetailRow
-                  label="Guests"
-                  value={`${selectedResource.numberOfGuests} ${t("guests")}`}
-                />
-              </div>
+                <div className="space-y-3">
+                  <DetailRow
+                    label="Property"
+                    value={selectedResource.propertyName}
+                  />
+                  <DetailRow
+                    label="Check-in"
+                    value={selectedEvent!.start.toLocaleDateString(undefined, {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  />
+                  <DetailRow
+                    label="Check-out"
+                    value={selectedEvent!.end.toLocaleDateString(undefined, {
+                      weekday: "short",
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                  />
+                  <DetailRow
+                    label="Duration"
+                    value={`${nights} ${t("nights")}`}
+                  />
+                  <DetailRow
+                    label="Guests"
+                    value={`${selectedResource.numberOfGuests} ${t("guests")}`}
+                  />
+                </div>
 
-              {selectedResource.specialRequests && (
-                <>
-                  <Separator className="my-4" />
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">
-                      Special requests
-                    </p>
-                    <p className="mt-1 text-sm">
-                      {selectedResource.specialRequests}
-                    </p>
-                  </div>
-                </>
-              )}
+                {selectedResource.specialRequests && (
+                  <>
+                    <Separator />
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">
+                        Special requests
+                      </p>
+                      <p className="mt-1 text-sm">
+                        {selectedResource.specialRequests}
+                      </p>
+                    </div>
+                  </>
+                )}
 
-              <Separator className="my-4" />
+                <Separator />
 
-              <div className="space-y-2">
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full cursor-pointer"
-                  icon={<ExternalLink className="size-4" />}
-                >
-                  <a
-                    href={`${GUEST_BASE_URL}/${selectedResource.guestToken}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                <div className="space-y-2">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full cursor-pointer"
+                    icon={<ExternalLink className="size-4" />}
                   >
-                    {t("viewGuestPage")}
-                  </a>
-                </Button>
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full cursor-pointer"
-                  icon={<Pencil className="size-4" />}
-                >
-                  <Link href={`/admin/reservations`}>
-                    {t("editReservation")}
-                  </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full cursor-pointer"
-                  disabled
-                  icon={<MessageCircle className="size-4" />}
-                >
-                  {t("messageGuest")} — {t("comingSoon")}
-                </Button>
+                    <a
+                      href={`${GUEST_BASE_URL}/${selectedResource.guestToken}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t("viewGuestPage")}
+                    </a>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full cursor-pointer"
+                    icon={<Pencil className="size-4" />}
+                  >
+                    <Link href={`/admin/reservations/${selectedEvent!.id}`}>
+                      {t("editReservation")}
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full cursor-pointer"
+                    disabled
+                    icon={<MessageCircle className="size-4" />}
+                  >
+                    {t("messageGuest")} — {t("comingSoon")}
+                  </Button>
+                </div>
               </div>
             </>
           );})()}

@@ -27,59 +27,103 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { GUEST_BASE_URL, RESERVATION_SOURCES } from "@/lib/admin/constants";
-import { createReservation } from "@/server_actions/reservations";
+import { GUEST_BASE_URL, RESERVATION_SOURCES, RESERVATION_STATUSES } from "@/lib/admin/constants";
+import { useRouter } from "@/lib/i18n/navigation";
+import { createReservation, updateReservation } from "@/server_actions/reservations";
 
 interface ReservationFormProps {
   properties: { id: string; name: string }[];
+  initialData?: {
+    id: string;
+    propertyId: string;
+    guestName: string;
+    guestEmail: string | null;
+    guestPhone: string | null;
+    guestNationality: string | null;
+    numberOfGuests: number;
+    checkIn: Date | string;
+    checkOut: Date | string;
+    specialRequests: string | null;
+    source: string;
+    status: string;
+    guestToken: string;
+  };
 }
 
-export function ReservationForm({ properties }: ReservationFormProps) {
+function formatDateForInput(d: Date | string): string {
+  const date = typeof d === "string" ? new Date(d) : d;
+  return date.toISOString().split("T")[0];
+}
+
+export function ReservationForm({ properties, initialData }: ReservationFormProps) {
   const t = useTranslations("Admin.reservations");
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const isEditing = !!initialData;
   const [created, setCreated] = useState<{
     guestToken: string;
     guestName: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const [propertyId, setPropertyId] = useState("");
-  const [guestName, setGuestName] = useState("");
-  const [guestEmail, setGuestEmail] = useState("");
-  const [guestPhone, setGuestPhone] = useState("");
-  const [guestNationality, setGuestNationality] = useState("");
-  const [numberOfGuests, setNumberOfGuests] = useState(1);
-  const [checkIn, setCheckIn] = useState("");
-  const [checkOut, setCheckOut] = useState("");
-  const [specialRequests, setSpecialRequests] = useState("");
-  const [source, setSource] = useState("direct");
+  const [propertyId, setPropertyId] = useState(initialData?.propertyId ?? "");
+  const [guestName, setGuestName] = useState(initialData?.guestName ?? "");
+  const [guestEmail, setGuestEmail] = useState(initialData?.guestEmail ?? "");
+  const [guestPhone, setGuestPhone] = useState(initialData?.guestPhone ?? "");
+  const [guestNationality, setGuestNationality] = useState(initialData?.guestNationality ?? "");
+  const [numberOfGuests, setNumberOfGuests] = useState(initialData?.numberOfGuests ?? 1);
+  const [checkIn, setCheckIn] = useState(initialData ? formatDateForInput(initialData.checkIn) : "");
+  const [checkOut, setCheckOut] = useState(initialData ? formatDateForInput(initialData.checkOut) : "");
+  const [specialRequests, setSpecialRequests] = useState(initialData?.specialRequests ?? "");
+  const [source, setSource] = useState(initialData?.source ?? "direct");
+  const [status, setStatus] = useState(initialData?.status ?? "confirmed");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!guestName.trim() || !propertyId || !checkIn || !checkOut) return;
 
     startTransition(async () => {
-      const result = await createReservation({
-        propertyId,
-        guestName: guestName.trim(),
-        guestEmail: guestEmail || undefined,
-        guestPhone: guestPhone || undefined,
-        guestNationality: guestNationality || undefined,
-        numberOfGuests,
-        checkIn,
-        checkOut,
-        specialRequests: specialRequests || undefined,
-        source,
-      });
-
-      if (result.success && result.reservation) {
-        toast.success(t("created"));
-        setCreated({
-          guestToken: result.reservation.guestToken,
-          guestName: result.reservation.guestName,
+      if (isEditing) {
+        const result = await updateReservation(initialData.id, {
+          guestName: guestName.trim(),
+          guestEmail: guestEmail || undefined,
+          guestPhone: guestPhone || undefined,
+          guestNationality: guestNationality || undefined,
+          numberOfGuests,
+          checkIn,
+          checkOut,
+          specialRequests: specialRequests || undefined,
+          source,
+          status,
         });
+        if (result.success) {
+          toast.success(t("updated"));
+          router.push("/admin/reservations");
+        } else {
+          toast.error(result.error);
+        }
       } else {
-        toast.error(result.error);
+        const result = await createReservation({
+          propertyId,
+          guestName: guestName.trim(),
+          guestEmail: guestEmail || undefined,
+          guestPhone: guestPhone || undefined,
+          guestNationality: guestNationality || undefined,
+          numberOfGuests,
+          checkIn,
+          checkOut,
+          specialRequests: specialRequests || undefined,
+          source,
+        });
+        if (result.success && result.reservation) {
+          toast.success(t("created"));
+          setCreated({
+            guestToken: result.reservation.guestToken,
+            guestName: result.reservation.guestName,
+          });
+        } else {
+          toast.error(result.error);
+        }
       }
     });
   };
@@ -105,7 +149,6 @@ export function ReservationForm({ properties }: ReservationFormProps) {
     window.open(`https://wa.me/?text=${message}`, "_blank");
   };
 
-  // Success screen
   if (created) {
     return (
       <div className="mx-auto max-w-2xl">
@@ -153,7 +196,6 @@ export function ReservationForm({ properties }: ReservationFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="mx-auto max-w-2xl space-y-6">
-      {/* Guest Details */}
       <Card>
         <CardHeader>
           <CardTitle>{t("guestDetails")}</CardTitle>
@@ -215,7 +257,6 @@ export function ReservationForm({ properties }: ReservationFormProps) {
         </CardContent>
       </Card>
 
-      {/* Stay Details */}
       <Card>
         <CardHeader>
           <CardTitle>{t("stayDetails")}</CardTitle>
@@ -223,7 +264,7 @@ export function ReservationForm({ properties }: ReservationFormProps) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label>{t("property")}</Label>
-            <Select value={propertyId} onValueChange={setPropertyId}>
+            <Select value={propertyId} onValueChange={setPropertyId} disabled={isEditing}>
               <SelectTrigger className="cursor-pointer">
                 <SelectValue placeholder={t("selectProperty")} />
               </SelectTrigger>
@@ -275,6 +316,23 @@ export function ReservationForm({ properties }: ReservationFormProps) {
               </SelectContent>
             </Select>
           </div>
+          {isEditing && (
+            <div className="space-y-2">
+              <Label>{t("status")}</Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="cursor-pointer">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RESERVATION_STATUSES.map((s) => (
+                    <SelectItem key={s} value={s} className="cursor-pointer">
+                      {t(`statuses.${s}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label>{t("specialRequests")}</Label>
             <Textarea

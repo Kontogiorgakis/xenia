@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, ChevronsUpDown, Globe, Home, LogOut, Moon, Sun } from "lucide-react";
+import { Building2, Globe, Home, LogOut, Moon, Sun } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
@@ -119,17 +119,16 @@ export const AdminSidebar = () => {
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  className="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
-                  <Avatar className="size-8 rounded-lg">
+                  <Avatar className="size-8 shrink-0 rounded-lg">
                     {userImage && <AvatarImage src={userImage} alt={userName} />}
                     <AvatarFallback className="rounded-lg text-xs">{userInitials}</AvatarFallback>
                   </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
+                  <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden">
                     <span className="truncate font-semibold">{userName}</span>
                     <span className="truncate text-xs text-muted-foreground">{userEmail}</span>
                   </div>
-                  <ChevronsUpDown className="ms-auto size-4" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent

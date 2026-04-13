@@ -2,23 +2,23 @@ import { ArrowLeft } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
-import { PropertyForm } from "@/components/admin/property-form";
+import { ContactsSection } from "@/components/admin/contacts-section";
 import { Button } from "@/components/ui/button";
 import { TypographyH3 } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
-import { getPropertyById } from "@/server_actions/properties";
+import { getLocationById } from "@/server_actions/locations";
 
-interface PropertyEditPageProps {
+interface ContactsPageProps {
   params: Promise<{ locale: string; id: string }>;
 }
 
-const PropertyEditPage = async ({ params }: PropertyEditPageProps) => {
+const ContactsPage = async ({ params }: ContactsPageProps) => {
   const { locale, id } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("Admin.properties");
+  const t = await getTranslations("Admin.locations.contacts");
 
-  const result = await getPropertyById(id);
-  if (!result.success || !result.property) {
+  const result = await getLocationById(id);
+  if (!result.success || !result.location) {
     notFound();
   }
 
@@ -30,11 +30,11 @@ const PropertyEditPage = async ({ params }: PropertyEditPageProps) => {
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
-        <TypographyH3>{t("editProperty")}</TypographyH3>
+        <TypographyH3>{t("title")} — {result.location.name}</TypographyH3>
       </div>
-      <PropertyForm initialData={result.property} />
+      <ContactsSection locationId={id} initialContacts={result.location.contacts} />
     </div>
   );
 };
 
-export default PropertyEditPage;
+export default ContactsPage;

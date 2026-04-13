@@ -1,34 +1,30 @@
 import { ArrowLeft } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-import { ReservationForm } from "@/components/admin/reservation-form";
+import { LocationForm } from "@/components/admin/location-form";
 import { Button } from "@/components/ui/button";
 import { TypographyH3 } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
-import { getProperties } from "@/server_actions/properties";
 import { BasePageProps } from "@/types/page-props";
 
-const NewReservationPage = async ({ params }: BasePageProps) => {
+const NewLocationPage = async ({ params }: BasePageProps) => {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("Admin.reservations");
-
-  const result = await getProperties();
-  const properties = result.properties.map((p) => ({ id: p.id, name: p.name }));
+  const t = await getTranslations("Admin.locations");
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button asChild variant="ghost" size="icon" className="cursor-pointer">
-          <Link href="/admin/reservations">
+          <Link href="/admin/properties">
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
-        <TypographyH3>{t("addReservation")}</TypographyH3>
+        <TypographyH3>{t("addLocation")}</TypographyH3>
       </div>
-      <ReservationForm properties={properties} />
+      <LocationForm />
     </div>
   );
 };
 
-export default NewReservationPage;
+export default NewLocationPage;
