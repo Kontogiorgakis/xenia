@@ -29,6 +29,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { GUEST_BASE_URL, RESERVATION_SOURCES, RESERVATION_STATUSES } from "@/lib/admin/constants";
 import { useRouter } from "@/lib/i18n/navigation";
+import { getAvailableProperties } from "@/server_actions/properties";
 import { createReservation, updateReservation } from "@/server_actions/reservations";
 
 interface ReservationFormProps {
@@ -67,6 +68,10 @@ export function ReservationForm({ properties, initialData }: ReservationFormProp
   const [copied, setCopied] = useState(false);
 
   const [propertyId, setPropertyId] = useState(initialData?.propertyId ?? "");
+  const [availableProperties, setAvailableProperties] = useState<
+    { id: string; name: string }[]
+  >(isEditing ? properties : []);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [guestName, setGuestName] = useState(initialData?.guestName ?? "");
   const [guestEmail, setGuestEmail] = useState(initialData?.guestEmail ?? "");
   const [guestPhone, setGuestPhone] = useState(initialData?.guestPhone ?? "");
@@ -77,6 +82,32 @@ export function ReservationForm({ properties, initialData }: ReservationFormProp
   const [specialRequests, setSpecialRequests] = useState(initialData?.specialRequests ?? "");
   const [source, setSource] = useState(initialData?.source ?? "direct");
   const [status, setStatus] = useState(initialData?.status ?? "confirmed");
+
+  // Fetch available properties when dates change (create mode only)
+  useEffect(() => {
+    if (isEditing) return;
+    if (!checkIn || !checkOut) {
+      setAvailableProperties([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingAvailability(true);
+    // Debounce so rapid date-picker typing doesn't fire a request per keystroke
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+      getAvailableProperties(checkIn, checkOut).then((result) => {
+        if (cancelled) return;
+        const list = result.success ? result.properties : [];
+        setAvailableProperties(list);
+        setPropertyId((prev) => (list.some((p) => p.id === prev) ? prev : ""));
+        setLoadingAvailability(false);
+      });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [checkIn, checkOut, isEditing]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -262,21 +293,6 @@ export function ReservationForm({ properties, initialData }: ReservationFormProp
           <CardTitle>{t("stayDetails")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>{t("property")}</Label>
-            <Select value={propertyId} onValueChange={setPropertyId} disabled={isEditing}>
-              <SelectTrigger className="cursor-pointer">
-                <SelectValue placeholder={t("selectProperty")} />
-              </SelectTrigger>
-              <SelectContent>
-                {properties.map((p) => (
-                  <SelectItem key={p.id} value={p.id} className="cursor-pointer">
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>
@@ -301,6 +317,57 @@ export function ReservationForm({ properties, initialData }: ReservationFormProp
               />
             </div>
           </div>
+
+          {isEditing ? (
+            <div className="space-y-2">
+              <Label>{t("property")}</Label>
+              <Select value={propertyId} onValueChange={setPropertyId} disabled>
+                <SelectTrigger className="cursor-pointer">
+                  <SelectValue placeholder={t("selectProperty")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {properties.map((p) => (
+                    <SelectItem key={p.id} value={p.id} className="cursor-pointer">
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : checkIn && checkOut ? (
+            loadingAvailability ? (
+              <div className="space-y-2">
+                <Label>{t("property")}</Label>
+                <div className="flex h-9 items-center rounded-md border border-input bg-background px-3 text-sm text-muted-foreground">
+                  {t("checkingAvailability")}
+                </div>
+              </div>
+            ) : availableProperties.length === 0 ? (
+              <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                {t("noPropertiesAvailable")}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Label>{t("availableProperties")}</Label>
+                <Select value={propertyId} onValueChange={setPropertyId}>
+                  <SelectTrigger className="cursor-pointer">
+                    <SelectValue placeholder={t("selectProperty")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableProperties.map((p) => (
+                      <SelectItem key={p.id} value={p.id} className="cursor-pointer">
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {t("selectDatesFirst")}
+            </p>
+          )}
           <div className="space-y-2">
             <Label>{t("source")}</Label>
             <Select value={source} onValueChange={setSource}>

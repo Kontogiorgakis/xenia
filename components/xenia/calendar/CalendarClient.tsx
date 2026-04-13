@@ -6,9 +6,6 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
-  MessageCircle,
-  Pencil,
   Plus,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -17,7 +14,10 @@ import { Calendar, dateFnsLocalizer, View } from "react-big-calendar";
 
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
-import { Badge } from "@/components/ui/badge";
+import {
+  ReservationDetail,
+  ReservationDetailSheet,
+} from "@/components/admin/reservation-detail-sheet";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -26,20 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { TypographyH3, TypographyRegular } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
-import {
-  GUEST_BASE_URL,
-  SOURCE_COLORS,
-  getSourceColor,
-} from "@/lib/admin/constants";
+import { SOURCE_COLORS, getSourceColor } from "@/lib/admin/constants";
 import { CalendarEvent } from "@/types/xenia";
 
 import { TimelineView } from "./TimelineView";
@@ -113,14 +102,21 @@ export function CalendarClient({ events, properties }: CalendarClientProps) {
     setSelectedEvent(event);
   }, []);
 
-  // Compute detail panel info
-  const selectedResource = selectedEvent?.resource;
-  const nights = selectedEvent
-    ? Math.ceil(
-        (selectedEvent.end.getTime() - selectedEvent.start.getTime()) /
-          (1000 * 60 * 60 * 24)
-      )
-    : 0;
+  const selectedDetail: ReservationDetail | null = selectedEvent
+    ? {
+        id: selectedEvent.id,
+        guestName: selectedEvent.resource.guestName,
+        guestNationality: selectedEvent.resource.guestNationality,
+        numberOfGuests: selectedEvent.resource.numberOfGuests,
+        checkIn: selectedEvent.start,
+        checkOut: selectedEvent.end,
+        source: selectedEvent.resource.source,
+        status: selectedEvent.resource.status,
+        specialRequests: selectedEvent.resource.specialRequests,
+        guestToken: selectedEvent.resource.guestToken,
+        propertyName: selectedEvent.resource.propertyName,
+      }
+    : null;
 
   const bigCalendarView: View = view === "timeline" ? "month" : view;
 
@@ -250,137 +246,10 @@ export function CalendarClient({ events, properties }: CalendarClientProps) {
         </div>
       )}
 
-      {/* Reservation Detail Sheet */}
-      <Sheet
-        open={!!selectedEvent}
-        onOpenChange={(open) => !open && setSelectedEvent(null)}
-      >
-        <SheetContent className="overflow-y-auto sm:max-w-md">
-          {selectedResource && (() => {
-            const sourceColor = getSourceColor(selectedResource.source);
-            return (
-            <>
-              <SheetHeader>
-                <div className="mb-2">
-                  <Badge
-                    style={{
-                      backgroundColor: sourceColor.bg,
-                      color: sourceColor.text,
-                    }}
-                  >
-                    {sourceColor.label}
-                  </Badge>
-                </div>
-                <SheetTitle className="text-xl">
-                  {selectedResource.guestName}
-                </SheetTitle>
-                {selectedResource.guestNationality && (
-                  <p className="text-sm text-muted-foreground">
-                    {selectedResource.guestNationality}
-                  </p>
-                )}
-              </SheetHeader>
-
-              <div className="space-y-6 px-4 pb-4">
-                <Separator />
-
-                <div className="space-y-3">
-                  <DetailRow
-                    label="Property"
-                    value={selectedResource.propertyName}
-                  />
-                  <DetailRow
-                    label="Check-in"
-                    value={selectedEvent!.start.toLocaleDateString(undefined, {
-                      weekday: "short",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  />
-                  <DetailRow
-                    label="Check-out"
-                    value={selectedEvent!.end.toLocaleDateString(undefined, {
-                      weekday: "short",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })}
-                  />
-                  <DetailRow
-                    label="Duration"
-                    value={`${nights} ${t("nights")}`}
-                  />
-                  <DetailRow
-                    label="Guests"
-                    value={`${selectedResource.numberOfGuests} ${t("guests")}`}
-                  />
-                </div>
-
-                {selectedResource.specialRequests && (
-                  <>
-                    <Separator />
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">
-                        Special requests
-                      </p>
-                      <p className="mt-1 text-sm">
-                        {selectedResource.specialRequests}
-                      </p>
-                    </div>
-                  </>
-                )}
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full cursor-pointer"
-                    icon={<ExternalLink className="size-4" />}
-                  >
-                    <a
-                      href={`${GUEST_BASE_URL}/${selectedResource.guestToken}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {t("viewGuestPage")}
-                    </a>
-                  </Button>
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full cursor-pointer"
-                    icon={<Pencil className="size-4" />}
-                  >
-                    <Link href={`/admin/reservations/${selectedEvent!.id}`}>
-                      {t("editReservation")}
-                    </Link>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full cursor-pointer"
-                    disabled
-                    icon={<MessageCircle className="size-4" />}
-                  >
-                    {t("messageGuest")} — {t("comingSoon")}
-                  </Button>
-                </div>
-              </div>
-            </>
-          );})()}
-        </SheetContent>
-      </Sheet>
-    </div>
-  );
-}
-
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium">{value}</span>
+      <ReservationDetailSheet
+        reservation={selectedDetail}
+        onClose={() => setSelectedEvent(null)}
+      />
     </div>
   );
 }

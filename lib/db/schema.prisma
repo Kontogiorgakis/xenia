@@ -63,6 +63,13 @@ model Property {
   localTips      String?  @map("local_tips")
   emergencyPhone String?  @map("emergency_phone")
 
+  // Apartment specs (for booking page)
+  squareMeters   Int?     @map("square_meters")
+  bedrooms       Int?
+  bathrooms      Int?
+  beds           Int?
+  maxGuests      Int?     @map("max_guests")
+
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -128,6 +135,11 @@ model Location {
   buildingAccess  String?  @map("building_access")
   quietHoursStart String?  @default("23:00") @map("quiet_hours_start")
   quietHoursEnd   String?  @default("08:00") @map("quiet_hours_end")
+  checkInTime     String?  @default("15:00") @map("check_in_time")
+  checkOutTime    String?  @default("11:00") @map("check_out_time")
+
+  localTips       String?  @map("local_tips")
+  emergencyPhone  String?  @map("emergency_phone")
 
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")

@@ -14,15 +14,34 @@ export const getLocations = async () => {
     return { success: false, error: "Unauthorized", locations: [] };
 
   try {
+    const now = new Date();
     const locations = await prisma.location.findMany({
       where: { hostId: session.user.id },
       include: {
         properties: {
           include: {
-            _count: { select: { reservations: true } },
+            reservations: {
+              where: {
+                checkOut: { gte: now },
+                status: { not: "cancelled" },
+              },
+              orderBy: { checkIn: "asc" },
+              take: 3,
+              select: {
+                id: true,
+                guestName: true,
+                guestNationality: true,
+                checkIn: true,
+                checkOut: true,
+                numberOfGuests: true,
+                source: true,
+                status: true,
+                specialRequests: true,
+                guestToken: true,
+              },
+            },
           },
         },
-        _count: { select: { contacts: true } },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -71,6 +90,10 @@ export const createLocation = async (data: {
   buildingAccess?: string;
   quietHoursStart?: string;
   quietHoursEnd?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  localTips?: string;
+  emergencyPhone?: string;
 }) => {
   const session = await getServerSession(authOptions);
 
@@ -109,6 +132,10 @@ export const updateLocation = async (
     buildingAccess?: string;
     quietHoursStart?: string;
     quietHoursEnd?: string;
+    checkInTime?: string;
+    checkOutTime?: string;
+    localTips?: string;
+    emergencyPhone?: string;
   }
 ) => {
   const session = await getServerSession(authOptions);

@@ -1,14 +1,17 @@
 "use client";
 
 import {
+  ArrowRight,
   Building2,
   Clock,
   Globe,
   Key,
   MapPin,
   ParkingCircle,
+  Phone,
   Plus,
   Save,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -35,6 +38,7 @@ import { createLocation, updateLocation } from "@/server_actions/locations";
 import { XeniaAmenity, XeniaRule, AmenityCategory } from "@/types/xenia";
 
 import { ContactsSection } from "./contacts-section";
+import { WizardSteps } from "./wizard-steps";
 
 const AMENITY_CATEGORIES: AmenityCategory[] = [
   "pool", "parking", "garden", "bbq", "gym", "spa", "laundry", "reception", "restaurant", "other",
@@ -70,7 +74,11 @@ interface LocationFormProps {
     parkingInfo: string | null;
     buildingAccess: string | null;
     quietHoursStart: string | null;
+    checkInTime: string | null;
+    checkOutTime: string | null;
     quietHoursEnd: string | null;
+    localTips: string | null;
+    emergencyPhone: string | null;
     contacts: { id: string; category: string; name: string; phone: string; notes: string | null; icon: string | null; displayOrder: number }[];
   };
 }
@@ -115,8 +123,12 @@ export function LocationForm({ initialData }: LocationFormProps) {
   const [gateCode, setGateCode] = useState(initialData?.gateCode ?? "");
   const [parkingInfo, setParkingInfo] = useState(initialData?.parkingInfo ?? "");
   const [buildingAccess, setBuildingAccess] = useState(initialData?.buildingAccess ?? "");
+  const [checkInTime, setCheckInTime] = useState(initialData?.checkInTime ?? "15:00");
+  const [checkOutTime, setCheckOutTime] = useState(initialData?.checkOutTime ?? "11:00");
   const [quietStart, setQuietStart] = useState(initialData?.quietHoursStart ?? "23:00");
   const [quietEnd, setQuietEnd] = useState(initialData?.quietHoursEnd ?? "08:00");
+  const [localTips, setLocalTips] = useState(initialData?.localTips ?? "");
+  const [emergencyPhone, setEmergencyPhone] = useState(initialData?.emergencyPhone ?? "");
 
   const handleNameBlur = () => {
     if (!isEditing && name) setSlug(generateSlug(name));
@@ -167,22 +179,111 @@ export function LocationForm({ initialData }: LocationFormProps) {
         gateCode: gateCode || undefined,
         parkingInfo: parkingInfo || undefined,
         buildingAccess: buildingAccess || undefined,
+        checkInTime: checkInTime || undefined,
+        checkOutTime: checkOutTime || undefined,
+        localTips: localTips || undefined,
+        emergencyPhone: emergencyPhone || undefined,
         quietHoursStart: quietStart || undefined,
         quietHoursEnd: quietEnd || undefined,
       };
 
-      const result = isEditing
-        ? await updateLocation(initialData.id, data)
-        : await createLocation(data);
-
-      if (result.success) {
-        toast.success(isEditing ? t("updated") : t("created"));
-        router.push("/admin/properties");
+      if (isEditing) {
+        const result = await updateLocation(initialData.id, data);
+        if (result.success) {
+          toast.success(t("updated"));
+          router.push("/admin/properties");
+        } else {
+          toast.error(result.error);
+        }
       } else {
-        toast.error(result.error);
+        const result = await createLocation(data);
+        if (result.success && result.location) {
+          toast.success(t("created"));
+          router.push(`/admin/properties/new?locationId=${result.location.id}&firstUnit=1`);
+        } else {
+          toast.error(result.error);
+        }
       }
     });
   };
+
+  // Create mode: simplified single-tab flow (basic info only, redirect to unit after)
+  if (!isEditing) {
+    return (
+      <div className="space-y-8">
+        <WizardSteps
+          currentStep={1}
+          steps={[
+            { number: 1, title: t("wizard.step1Title"), description: t("wizard.step1Desc") },
+            { number: 2, title: t("wizard.step2Title"), description: t("wizard.step2Desc") },
+          ]}
+        />
+
+        <div className="mx-auto max-w-2xl">
+          <div className="rounded-2xl bg-xenia-surface-low p-6 sm:p-8">
+            <h3 className="text-lg font-semibold">{t("wizard.propertyBasics")}</h3>
+            <p className="mb-6 mt-1 text-sm text-muted-foreground">
+              {t("wizard.propertyBasicsHint")}
+            </p>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>
+                  <Building2 className="inline size-3.5" /> {t("basic.name")}
+                </Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onBlur={handleNameBlur}
+                  placeholder={t("basic.namePlaceholder")}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>
+                  <MapPin className="inline size-3.5" /> {t("basic.address")}
+                </Label>
+                <Input
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>{t("basic.city")}</Label>
+                  <Input
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>
+                    <Globe className="inline size-3.5" /> {t("basic.country")}
+                  </Label>
+                  <Input
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-center justify-end">
+            <Button
+              onClick={handleSubmit}
+              loading={isPending}
+              className="cursor-pointer"
+              size="lg"
+            >
+              {isPending ? t("saving") : t("nextAddUnit")}
+              <ArrowRight className="ml-1 size-4" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Tabs defaultValue="basic" className="space-y-6">
@@ -190,9 +291,7 @@ export function LocationForm({ initialData }: LocationFormProps) {
         <TabsTrigger value="basic" className="cursor-pointer">{t("tabs.basic")}</TabsTrigger>
         <TabsTrigger value="amenities" className="cursor-pointer">{t("tabs.amenities")}</TabsTrigger>
         <TabsTrigger value="rules" className="cursor-pointer">{t("tabs.rules")}</TabsTrigger>
-        {isEditing && (
-          <TabsTrigger value="contacts" className="cursor-pointer">{t("tabs.contacts")}</TabsTrigger>
-        )}
+        <TabsTrigger value="contacts" className="cursor-pointer">{t("tabs.contacts")}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="basic" className="space-y-6">
@@ -315,6 +414,23 @@ export function LocationForm({ initialData }: LocationFormProps) {
         <h3 className="text-lg font-semibold">{t("rules.title")}</h3>
 
         <div className="max-w-xl space-y-6">
+          {/* Check-in / out times */}
+          <div className="space-y-2">
+            <Label><Clock className="inline size-3.5" /> {t("rules.checkInOut")}</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t("rules.checkInTime")}</Label>
+                <Input type="time" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">{t("rules.checkOutTime")}</Label>
+                <Input type="time" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} />
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
           {/* Quiet hours */}
           <div className="space-y-2">
             <Label><Clock className="inline size-3.5" /> {t("rules.quietHours")}</Label>
@@ -347,6 +463,25 @@ export function LocationForm({ initialData }: LocationFormProps) {
               <Label className="text-xs text-muted-foreground">{t("rules.buildingAccess")}</Label>
               <Textarea value={buildingAccess} onChange={(e) => setBuildingAccess(e.target.value)} placeholder={t("rules.buildingAccessPlaceholder")} rows={3} />
             </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground"><Phone className="inline size-3.5" /> {t("rules.emergencyPhone")}</Label>
+              <Input type="tel" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} placeholder="+30 ..." />
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Local tips for AI */}
+          <div className="space-y-2">
+            <Label className="font-medium"><Sparkles className="inline size-3.5" /> {t("rules.localTips")}</Label>
+            <p className="text-xs text-muted-foreground">{t("rules.localTipsHint")}</p>
+            <Textarea
+              value={localTips}
+              onChange={(e) => setLocalTips(e.target.value)}
+              placeholder={t("rules.localTipsPlaceholder")}
+              rows={6}
+            />
+            <p className="text-right text-xs text-muted-foreground">{localTips.length} characters</p>
           </div>
 
           <Separator />

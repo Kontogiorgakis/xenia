@@ -97,11 +97,38 @@ export const createReservation = async (data: {
     if (!property)
       return { success: false, error: "Property not found or unauthorized" };
 
+    const checkInDate = new Date(data.checkIn);
+    const checkOutDate = new Date(data.checkOut);
+
+    if (checkOutDate <= checkInDate) {
+      return { success: false, error: "Check-out must be after check-in" };
+    }
+
+    // Prevent overlapping reservations on the same property
+    const conflict = await prisma.reservation.findFirst({
+      where: {
+        propertyId: data.propertyId,
+        status: { not: "cancelled" },
+        checkIn: { lt: checkOutDate },
+        checkOut: { gt: checkInDate },
+      },
+      select: { id: true, guestName: true, checkIn: true, checkOut: true },
+    });
+
+    if (conflict) {
+      const from = new Date(conflict.checkIn).toLocaleDateString();
+      const to = new Date(conflict.checkOut).toLocaleDateString();
+      return {
+        success: false,
+        error: `This property is already booked from ${from} to ${to} (${conflict.guestName}). Pick different dates or cancel the existing reservation first.`,
+      };
+    }
+
     const reservation = await prisma.reservation.create({
       data: {
         ...data,
-        checkIn: new Date(data.checkIn),
-        checkOut: new Date(data.checkOut),
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
         numberOfGuests: data.numberOfGuests ?? 1,
       },
     });
@@ -142,9 +169,40 @@ export const updateReservation = async (
     if (!existing)
       return { success: false, error: "Reservation not found or unauthorized" };
 
+    const newCheckIn = data.checkIn ? new Date(data.checkIn) : existing.checkIn;
+    const newCheckOut = data.checkOut ? new Date(data.checkOut) : existing.checkOut;
+    const newStatus = data.status ?? existing.status;
+
+    if (newCheckOut <= newCheckIn) {
+      return { success: false, error: "Check-out must be after check-in" };
+    }
+
+    // Only check for overlap if dates changed and reservation isn't cancelled
+    if ((data.checkIn || data.checkOut || data.status) && newStatus !== "cancelled") {
+      const conflict = await prisma.reservation.findFirst({
+        where: {
+          id: { not: id },
+          propertyId: existing.propertyId,
+          status: { not: "cancelled" },
+          checkIn: { lt: newCheckOut },
+          checkOut: { gt: newCheckIn },
+        },
+        select: { guestName: true, checkIn: true, checkOut: true },
+      });
+
+      if (conflict) {
+        const from = new Date(conflict.checkIn).toLocaleDateString();
+        const to = new Date(conflict.checkOut).toLocaleDateString();
+        return {
+          success: false,
+          error: `Dates conflict with ${conflict.guestName} (${from} — ${to}).`,
+        };
+      }
+    }
+
     const updateData: Record<string, unknown> = { ...data };
-    if (data.checkIn) updateData.checkIn = new Date(data.checkIn);
-    if (data.checkOut) updateData.checkOut = new Date(data.checkOut);
+    if (data.checkIn) updateData.checkIn = newCheckIn;
+    if (data.checkOut) updateData.checkOut = newCheckOut;
 
     const reservation = await prisma.reservation.update({
       where: { id },

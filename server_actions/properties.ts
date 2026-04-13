@@ -14,10 +14,30 @@ export const getProperties = async () => {
     return { success: false, error: "Unauthorized", properties: [] };
 
   try {
+    const now = new Date();
     const properties = await prisma.property.findMany({
       where: { hostId: session.user.id },
       include: {
-        _count: { select: { reservations: true } },
+        reservations: {
+          where: {
+            checkOut: { gte: now },
+            status: { not: "cancelled" },
+          },
+          orderBy: { checkIn: "asc" },
+          take: 3,
+          select: {
+            id: true,
+            guestName: true,
+            guestNationality: true,
+            checkIn: true,
+            checkOut: true,
+            numberOfGuests: true,
+            source: true,
+            status: true,
+            specialRequests: true,
+            guestToken: true,
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -25,6 +45,49 @@ export const getProperties = async () => {
     return { success: true, properties };
   } catch (error) {
     console.error("Error fetching properties:", error);
+    return { success: false, error: "Failed to fetch properties", properties: [] };
+  }
+};
+
+export const getAvailableProperties = async (
+  checkIn: string,
+  checkOut: string
+) => {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user?.id)
+    return { success: false, error: "Unauthorized", properties: [] };
+
+  try {
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+
+    if (
+      Number.isNaN(checkInDate.getTime()) ||
+      Number.isNaN(checkOutDate.getTime()) ||
+      checkOutDate <= checkInDate
+    ) {
+      return { success: false, error: "Invalid dates", properties: [] };
+    }
+
+    const properties = await prisma.property.findMany({
+      where: {
+        hostId: session.user.id,
+        reservations: {
+          none: {
+            status: { not: "cancelled" },
+            checkIn: { lt: checkOutDate },
+            checkOut: { gt: checkInDate },
+          },
+        },
+      },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+
+    return { success: true, properties };
+  } catch (error) {
+    console.error("Error fetching available properties:", error);
     return { success: false, error: "Failed to fetch properties", properties: [] };
   }
 };
@@ -39,6 +102,17 @@ export const getPropertyById = async (id: string) => {
     const property = await prisma.property.findFirst({
       where: { id, hostId: session.user.id },
       include: {
+        location: {
+          select: {
+            id: true,
+            name: true,
+            address: true,
+            city: true,
+            country: true,
+            checkInTime: true,
+            checkOutTime: true,
+          },
+        },
         reservations: {
           orderBy: { checkIn: "desc" },
         },
@@ -68,6 +142,12 @@ export const createProperty = async (data: {
   description?: string;
   localTips?: string;
   emergencyPhone?: string;
+  locationId?: string;
+  squareMeters?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  beds?: number;
+  maxGuests?: number;
 }) => {
   const session = await getServerSession(authOptions);
 
@@ -75,6 +155,16 @@ export const createProperty = async (data: {
 
   try {
     const slug = generateSlug(data.name);
+
+    // If assigning to a location, verify ownership
+    if (data.locationId) {
+      const location = await prisma.location.findFirst({
+        where: { id: data.locationId, hostId: session.user.id },
+      });
+      if (!location) {
+        return { success: false, error: "Location not found or unauthorized" };
+      }
+    }
 
     const property = await prisma.property.create({
       data: {
@@ -107,6 +197,11 @@ export const updateProperty = async (
     description?: string;
     localTips?: string;
     emergencyPhone?: string;
+    squareMeters?: number | null;
+    bedrooms?: number | null;
+    bathrooms?: number | null;
+    beds?: number | null;
+    maxGuests?: number | null;
   }
 ) => {
   const session = await getServerSession(authOptions);
