@@ -135,6 +135,8 @@ model Location {
   city            String?
   country         String   @default("Greece")
 
+  description     String?
+
   amenities       String?  @default("[]")
   rules           String?  @default("[]")
 
@@ -191,6 +193,16 @@ model Location {
   hostBio         String? @map("host_bio")
   brandColor      String? @default("#1B4D6E") @map("brand_color")
 
+  // Public booking page
+  bookingToken          String?   @unique @map("booking_token")
+  bookingEnabled        Boolean   @default(false) @map("booking_enabled")
+  bookingMode           String    @default("contact_only") @map("booking_mode")
+  unitSelectionMode     String    @default("auto_assign") @map("unit_selection_mode")
+  bookingTokenUpdatedAt DateTime? @map("booking_token_updated_at")
+
+  // Display order (drag-to-reorder on properties list)
+  displayOrder    Int       @default(0) @map("display_order")
+
   // Archive (soft delete)
   archivedAt      DateTime? @map("archived_at")
 
@@ -205,6 +217,7 @@ model Location {
   knowledgeEntries    KnowledgeEntry[]
   unansweredQuestions UnansweredQuestion[]
   inquiries           Inquiry[]
+  dateBlocks          DateBlock[]
 
   @@index([hostId])
   @@index([slug])
@@ -309,4 +322,23 @@ model Inquiry {
   @@index([status])
   @@index([type])
   @@map("inquiries")
+}
+
+model DateBlock {
+  id         String   @id @default(cuid())
+
+  startDate  DateTime @map("start_date")
+  endDate    DateTime @map("end_date")
+  reason     String?
+  notes      String?
+
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  locationId String   @map("location_id")
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([locationId])
+  @@index([startDate])
+  @@index([endDate])
+  @@map("date_blocks")
 }

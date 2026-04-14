@@ -478,6 +478,9 @@
         "address": "Address",
         "city": "City",
         "country": "Country",
+        "description": "Description",
+        "descriptionPlaceholder": "A short welcoming description guests will see on your booking page…",
+        "descriptionHint": "Shown on your booking page under the price",
         "guestUrl": "Guest URL preview"
       },
       "amenities": {
@@ -731,6 +734,37 @@
           "experiences": "Experiences",
           "other": "Other"
         }
+      },
+      "booking": {
+        "title": "Direct booking page",
+        "subtitle": "Let guests book directly from your own booking page",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "urlLabel": "Your booking page URL",
+        "copyLink": "Copy link",
+        "open": "Open",
+        "copied": "Link copied",
+        "modeLabel": "Booking mode",
+        "instantBook": "Instant Book",
+        "instantBookHint": "Guests book and pay immediately — confirmed automatically",
+        "contactOnly": "Contact Only",
+        "contactOnlyHint": "You review each request and approve within 24 hours",
+        "unitModeLabel": "Unit selection",
+        "autoAssign": "Auto-assign",
+        "autoAssignHint": "First available unit is booked automatically",
+        "guestChooses": "Guest chooses",
+        "guestChoosesHint": "Guest picks from available units",
+        "embedLabel": "Embed on your website",
+        "embedHint": "Paste this into your site to let guests book directly",
+        "embedCopied": "Embed code copied",
+        "copyEmbed": "Copy embed code",
+        "regenTitle": "Regenerate booking link",
+        "regenHint": "Invalidates the current link",
+        "regenerate": "Regenerate",
+        "regenerated": "Booking link regenerated",
+        "regenConfirmTitle": "Regenerate booking link?",
+        "regenConfirmDesc": "This will invalidate your current booking link. Any existing shares of the old link will stop working.",
+        "cancel": "Cancel"
       }
     },
     "calendar": {

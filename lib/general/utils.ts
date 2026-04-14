@@ -21,7 +21,8 @@ export function scrollAdminShellTop() {
     ?.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-export function getInitials(name: string): string {
+export function getInitials(name: string | null | undefined): string {
+  if (!name) return "?";
   return name
     .split(" ")
     .map((p) => p[0])

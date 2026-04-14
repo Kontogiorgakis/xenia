@@ -198,7 +198,27 @@ export function GuestbookEditor({
               )}
 
               {activeSection === "share" && (
-                <ShareQrCard url={guestUrl} propertyName={location.name} />
+                <ShareQrCard
+                  url={guestUrl}
+                  propertyName={location.name}
+                  booking={
+                    location.bookingToken
+                      ? {
+                          locationId: location.id,
+                          bookingToken: location.bookingToken,
+                          bookingEnabled: location.bookingEnabled,
+                          bookingMode:
+                            (location.bookingMode as
+                              | "instant_book"
+                              | "contact_only") ?? "contact_only",
+                          unitSelectionMode:
+                            (location.unitSelectionMode as
+                              | "auto_assign"
+                              | "guest_chooses") ?? "auto_assign",
+                        }
+                      : undefined
+                  }
+                />
               )}
             </div>
           </div>

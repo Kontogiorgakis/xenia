@@ -1,5 +1,7 @@
-import { AlertTriangle, CalendarClock, LogOut, LogIn } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { AlertTriangle, CalendarClock, LogIn, LogOut } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { cn } from "@/lib/utils";
 
@@ -74,8 +76,8 @@ function computeAlerts(reservations: Reservation[]): Alert[] {
   return alerts;
 }
 
-export async function PropertyAlert({ reservations }: PropertyAlertProps) {
-  const t = await getTranslations("Admin.properties");
+export function PropertyAlert({ reservations }: PropertyAlertProps) {
+  const t = useTranslations("Admin.properties");
   const alerts = computeAlerts(reservations);
 
   if (alerts.length === 0) return null;

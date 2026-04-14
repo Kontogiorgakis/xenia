@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { GUEST_BASE_URL } from "@/lib/admin/constants";
 import type { Location } from "@/lib/db";
 import { generateSlug } from "@/lib/general/slug";
@@ -52,6 +53,7 @@ export function LocationForm({ initialData }: LocationFormProps) {
   const [address, setAddress] = useState(initialData?.address ?? "");
   const [city, setCity] = useState(initialData?.city ?? "");
   const [country, setCountry] = useState(initialData?.country ?? "Greece");
+  const [description, setDescription] = useState(initialData?.description ?? "");
   const [slug, setSlug] = useState(initialData?.slug ?? "");
 
   const handleNameBlur = () => {
@@ -67,6 +69,7 @@ export function LocationForm({ initialData }: LocationFormProps) {
         address: address || undefined,
         city: city || undefined,
         country: country || undefined,
+        description: description.trim() || null,
       };
 
       if (isEditing) {
@@ -226,6 +229,18 @@ export function LocationForm({ initialData }: LocationFormProps) {
                 </Label>
                 <Input value={country} onChange={(e) => setCountry(e.target.value)} />
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label>{t("basic.description")}</Label>
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t("basic.descriptionPlaceholder")}
+                rows={4}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t("basic.descriptionHint")}
+              </p>
             </div>
             {slug && (
               <p className="text-sm text-muted-foreground">

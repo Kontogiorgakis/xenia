@@ -1,5 +1,6 @@
 "use server";
 
+import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 
@@ -56,13 +57,43 @@ export const getLocations = async (includeArchived = false) => {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [{ displayOrder: "asc" }, { createdAt: "desc" }],
     });
 
     return { success: true, locations };
   } catch (error) {
     console.error("Error fetching locations:", error);
     return { success: false, error: "Failed to fetch locations", locations: [] };
+  }
+};
+
+// Lightweight archived-only list — skips units / reservations / counts since
+// the archived section on the properties page only renders name + city + country.
+export const getArchivedLocations = async () => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id)
+    return { success: false, error: "Unauthorized", locations: [] };
+
+  try {
+    const locations = await prisma.location.findMany({
+      where: { hostId: session.user.id, archivedAt: { not: null } },
+      select: {
+        id: true,
+        name: true,
+        city: true,
+        country: true,
+        archivedAt: true,
+      },
+      orderBy: { archivedAt: "desc" },
+    });
+    return { success: true, locations };
+  } catch (error) {
+    console.error("Error fetching archived locations:", error);
+    return {
+      success: false,
+      error: "Failed to fetch archived locations",
+      locations: [],
+    };
   }
 };
 
@@ -129,6 +160,7 @@ export const createLocation = async (data: {
         ...data,
         slug,
         hostId: session.user.id,
+        bookingToken: nanoid(21),
       },
     });
 
@@ -147,6 +179,7 @@ export const updateLocation = async (
     address?: string;
     city?: string;
     country?: string;
+    description?: string | null;
     amenities?: string;
     rules?: string;
     gateCode?: string;
@@ -428,5 +461,35 @@ export const removePropertyFromLocation = async (propertyId: string) => {
   } catch (error) {
     console.error("Error removing property from location:", error);
     return { success: false, error: "Failed to remove property" };
+  }
+};
+
+export const reorderLocations = async (orderedIds: string[]) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return { success: false, error: "Unauthorized" };
+
+  try {
+    // Only touch locations the host owns.
+    const owned = await prisma.location.findMany({
+      where: { hostId: session.user.id, id: { in: orderedIds } },
+      select: { id: true },
+    });
+    const ownedSet = new Set(owned.map((l) => l.id));
+    const safeOrder = orderedIds.filter((id) => ownedSet.has(id));
+
+    await prisma.$transaction(
+      safeOrder.map((id, index) =>
+        prisma.location.update({
+          where: { id },
+          data: { displayOrder: index },
+        })
+      )
+    );
+
+    revalidatePath("/admin/properties");
+    return { success: true };
+  } catch (error) {
+    console.error("Error reordering locations:", error);
+    return { success: false, error: "Failed to reorder" };
   }
 };
