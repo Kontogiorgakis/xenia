@@ -24,7 +24,7 @@ const AdminLayout = async ({ children, params }: BaseLayoutProps) => {
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="admin-shell">
       <AdminSidebar />
       <SidebarInset className="h-svh max-h-svh overflow-hidden">
         <AdminHeader />

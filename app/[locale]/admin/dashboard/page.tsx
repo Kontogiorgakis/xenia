@@ -190,7 +190,7 @@ const DashboardPage = async ({ params }: BasePageProps) => {
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-3">
         <Button asChild icon={<Plus className="size-4" />}>
-          <Link href="/admin/properties/new">{t("addProperty")}</Link>
+          <Link href="/admin/properties">{t("addProperty")}</Link>
         </Button>
         <Button asChild variant="outline" icon={<Plus className="size-4" />}>
           <Link href="/admin/reservations/new">{t("addReservation")}</Link>

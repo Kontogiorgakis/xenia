@@ -229,6 +229,46 @@ export const updateProperty = async (
   }
 };
 
+export const duplicateProperty = async (id: string, newName: string) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    const source = await prisma.property.findFirst({
+      where: { id, hostId: session.user.id },
+    });
+    if (!source)
+      return { success: false, error: "Property not found or unauthorized" };
+
+    const slug = generateSlug(newName);
+    const {
+      id: _id,
+      slug: _slug,
+      createdAt: _c,
+      updatedAt: _u,
+      ...rest
+    } = source;
+    void _id;
+    void _slug;
+    void _c;
+    void _u;
+
+    const copy = await prisma.property.create({
+      data: {
+        ...rest,
+        name: newName.trim(),
+        slug,
+      },
+    });
+
+    revalidatePath("/admin");
+    return { success: true, property: copy };
+  } catch (error) {
+    console.error("Error duplicating property:", error);
+    return { success: false, error: "Failed to duplicate" };
+  }
+};
+
 export const deleteProperty = async (id: string) => {
   const session = await getServerSession(authOptions);
 

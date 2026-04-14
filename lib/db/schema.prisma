@@ -70,6 +70,11 @@ model Property {
   beds           Int?
   maxGuests      Int?     @map("max_guests")
 
+  // Photos + unit pricing override
+  coverPhoto     String?  @map("cover_photo")
+  photos         String?  @default("[]")
+  nightlyRate    Float?   @map("nightly_rate")
+
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -141,17 +146,65 @@ model Location {
   localTips       String?  @map("local_tips")
   emergencyPhone  String?  @map("emergency_phone")
 
+  // Photos
+  coverPhoto      String?  @map("cover_photo")
+  photos          String?  @default("[]")
+
+  // Local area distances (free text so host writes naturally)
+  nearestBeach       String? @map("nearest_beach")
+  nearestSupermarket String? @map("nearest_supermarket")
+  nearestPharmacy    String? @map("nearest_pharmacy")
+  nearestHospital    String? @map("nearest_hospital")
+  nearestAtm         String? @map("nearest_atm")
+  distanceAirport    String? @map("distance_airport")
+  distanceCenter     String? @map("distance_center")
+
+  // Structured policies (Airbnb-like)
+  smokingPolicy   String? @default("not_allowed") @map("smoking_policy")
+  petsPolicy      String? @default("not_allowed") @map("pets_policy")
+  partiesPolicy   String? @default("not_allowed") @map("parties_policy")
+  childrenPolicy  String? @default("welcome") @map("children_policy")
+  maxGuests       Int?    @map("max_guests")
+
+  // Booking settings
+  baseNightlyRate    Float?  @map("base_nightly_rate")
+  cleaningFee        Float?  @default(0) @map("cleaning_fee")
+  cityTax            Float?  @default(0) @map("city_tax")
+  securityDeposit    Float?  @default(0) @map("security_deposit")
+  minStayDefault     Int?    @default(1) @map("min_stay_default")
+  minStayPeak        Int?    @default(3) @map("min_stay_peak")
+  peakSeasonStart    String? @map("peak_season_start")
+  peakSeasonEnd      String? @map("peak_season_end")
+  instantBook        Boolean @default(true) @map("instant_book")
+  cancellationPolicy String? @default("moderate") @map("cancellation_policy")
+  advanceNotice      Int?    @default(1) @map("advance_notice")
+  bookingWindow      Int?    @default(365) @map("booking_window")
+  paymentMethod      String? @default("full") @map("payment_method")
+  depositPercent     Int?    @default(30) @map("deposit_percent")
+
+  // Branding
+  hostDisplayName String? @map("host_display_name")
+  hostPhoto       String? @map("host_photo")
+  hostBio         String? @map("host_bio")
+  brandColor      String? @default("#1B4D6E") @map("brand_color")
+
+  // Archive (soft delete)
+  archivedAt      DateTime? @map("archived_at")
+
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
   hostId          String   @map("host_id")
   host            User     @relation(fields: [hostId], references: [id], onDelete: Cascade)
 
-  properties      Property[]
-  contacts        Contact[]
+  properties          Property[]
+  contacts            Contact[]
+  knowledgeEntries    KnowledgeEntry[]
+  unansweredQuestions UnansweredQuestion[]
 
   @@index([hostId])
   @@index([slug])
+  @@index([archivedAt])
   @@map("locations")
 }
 
@@ -172,4 +225,38 @@ model Contact {
 
   @@index([locationId])
   @@map("contacts")
+}
+
+model KnowledgeEntry {
+  id         String   @id @default(cuid())
+  category   String
+  question   String
+  answer     String
+  timesAsked Int      @default(0) @map("times_asked")
+  isActive   Boolean  @default(true) @map("is_active")
+
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  locationId String   @map("location_id")
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([locationId])
+  @@map("knowledge_entries")
+}
+
+model UnansweredQuestion {
+  id         String    @id @default(cuid())
+  question   String
+  askedCount Int       @default(1) @map("asked_count")
+  resolved   Boolean   @default(false)
+  resolvedAt DateTime? @map("resolved_at")
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  locationId String    @map("location_id")
+  location   Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@index([locationId])
+  @@map("unanswered_questions")
 }

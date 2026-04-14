@@ -30,7 +30,7 @@ const QrPage = async ({ params }: QrPageProps) => {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button asChild variant="ghost" size="icon" className="cursor-pointer">
-          <Link href={`/admin/properties/${property.id}`}>
+          <Link href={`/admin/units/${property.id}`}>
             <ArrowLeft className="size-4" />
           </Link>
         </Button>

@@ -7,7 +7,7 @@ import { authOptions } from "@/lib/auth/auth";
 import { prisma } from "@/lib/db";
 import { generateSlug } from "@/lib/general/slug";
 
-export const getLocations = async () => {
+export const getLocations = async (includeArchived = false) => {
   const session = await getServerSession(authOptions);
 
   if (!session?.user?.id)
@@ -16,7 +16,10 @@ export const getLocations = async () => {
   try {
     const now = new Date();
     const locations = await prisma.location.findMany({
-      where: { hostId: session.user.id },
+      where: {
+        hostId: session.user.id,
+        ...(includeArchived ? {} : { archivedAt: null }),
+      },
       include: {
         properties: {
           include: {
@@ -38,6 +41,16 @@ export const getLocations = async () => {
                 status: true,
                 specialRequests: true,
                 guestToken: true,
+              },
+            },
+            _count: {
+              select: {
+                reservations: {
+                  where: {
+                    checkOut: { gte: now },
+                    status: { not: "cancelled" },
+                  },
+                },
               },
             },
           },
@@ -63,8 +76,17 @@ export const getLocationById = async (id: string) => {
     const location = await prisma.location.findFirst({
       where: { id, hostId: session.user.id },
       include: {
-        properties: true,
+        properties: {
+          include: {
+            _count: { select: { reservations: true } },
+          },
+        },
         contacts: { orderBy: { displayOrder: "asc" } },
+        knowledgeEntries: { orderBy: { createdAt: "desc" } },
+        unansweredQuestions: {
+          where: { resolved: false },
+          orderBy: { askedCount: "desc" },
+        },
       },
     });
 
@@ -136,6 +158,38 @@ export const updateLocation = async (
     checkOutTime?: string;
     localTips?: string;
     emergencyPhone?: string;
+    coverPhoto?: string | null;
+    photos?: string;
+    nearestBeach?: string | null;
+    nearestSupermarket?: string | null;
+    nearestPharmacy?: string | null;
+    nearestHospital?: string | null;
+    nearestAtm?: string | null;
+    distanceAirport?: string | null;
+    distanceCenter?: string | null;
+    smokingPolicy?: string;
+    petsPolicy?: string;
+    partiesPolicy?: string;
+    childrenPolicy?: string;
+    maxGuests?: number | null;
+    baseNightlyRate?: number | null;
+    cleaningFee?: number | null;
+    cityTax?: number | null;
+    securityDeposit?: number | null;
+    minStayDefault?: number | null;
+    minStayPeak?: number | null;
+    peakSeasonStart?: string | null;
+    peakSeasonEnd?: string | null;
+    instantBook?: boolean;
+    cancellationPolicy?: string;
+    advanceNotice?: number | null;
+    bookingWindow?: number | null;
+    paymentMethod?: string;
+    depositPercent?: number | null;
+    hostDisplayName?: string | null;
+    hostPhoto?: string | null;
+    hostBio?: string | null;
+    brandColor?: string | null;
   }
 ) => {
   const session = await getServerSession(authOptions);
@@ -176,12 +230,8 @@ export const deleteLocation = async (id: string) => {
     if (!existing)
       return { success: false, error: "Location not found or unauthorized" };
 
-    // Unassign properties before deleting
-    await prisma.property.updateMany({
-      where: { locationId: id },
-      data: { locationId: null },
-    });
-
+    // Cascade: delete all units under this location (reservations cascade via FK)
+    await prisma.property.deleteMany({ where: { locationId: id } });
     await prisma.location.delete({ where: { id } });
 
     revalidatePath("/admin");

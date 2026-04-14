@@ -185,6 +185,14 @@ html.with-scroll-bars-hidden {
   padding-right: 0 !important;
 }
 
+/* Admin shell is fully height-constrained — the inner ScrollArea owns
+   scrolling, so suppress the forced html scrollbar to avoid a phantom
+   track on the far right. */
+html:has(.admin-shell),
+html.with-scroll-bars-hidden:has(.admin-shell) {
+  overflow-y: hidden !important;
+}
+
 html body[data-scroll-locked] {
   margin-right: 0 !important;
   padding-right: 0 !important;

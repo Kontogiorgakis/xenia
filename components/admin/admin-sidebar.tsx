@@ -78,7 +78,7 @@ export const AdminSidebar = () => {
       <SidebarContent>
         {Object.entries(adminNavItems).map(([group, buttons]) => (
           <SidebarGroup key={group}>
-            <SidebarGroupLabel>{t(`sections.${group.toLowerCase()}`)}</SidebarGroupLabel>
+            <SidebarGroupLabel>{t(`sections.${group.toLowerCase().replace(/\s+/g, "")}`)}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {buttons.map((button) => {

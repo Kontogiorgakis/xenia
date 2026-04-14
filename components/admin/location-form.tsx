@@ -3,16 +3,10 @@
 import {
   ArrowRight,
   Building2,
-  Clock,
   Globe,
-  Key,
+  Info,
   MapPin,
-  ParkingCircle,
-  Phone,
-  Plus,
   Save,
-  Sparkles,
-  Trash2,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -21,66 +15,25 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { GUEST_BASE_URL } from "@/lib/admin/constants";
+import type { Location } from "@/lib/db";
 import { generateSlug } from "@/lib/general/slug";
+import { scrollAdminShellTop } from "@/lib/general/utils";
 import { useRouter } from "@/lib/i18n/navigation";
 import { createLocation, updateLocation } from "@/server_actions/locations";
-import { XeniaAmenity, XeniaRule, AmenityCategory } from "@/types/xenia";
 
-import { ContactsSection } from "./contacts-section";
+import { AmenitiesTab } from "./location-tabs/amenities-tab";
+import { BookingSettingsTab } from "./location-tabs/booking-settings-tab";
+import { PhotosTab } from "./location-tabs/photos-tab";
+import { RulesTab } from "./location-tabs/rules-tab";
 import { WizardSteps } from "./wizard-steps";
 
-const AMENITY_CATEGORIES: AmenityCategory[] = [
-  "pool", "parking", "garden", "bbq", "gym", "spa", "laundry", "reception", "restaurant", "other",
-];
-
-const QUICK_AMENITIES: { category: AmenityCategory; name: string }[] = [
-  { category: "pool", name: "Swimming pool" },
-  { category: "parking", name: "Parking area" },
-  { category: "bbq", name: "BBQ area" },
-  { category: "garden", name: "Garden" },
-  { category: "gym", name: "Gym" },
-  { category: "laundry", name: "Laundry" },
-];
-
-const QUICK_RULES = [
-  "No smoking",
-  "No parties",
-  "No pets",
-  "Quiet after 23:00",
-];
+const TAB_KEYS = ["basic", "photos", "facilities", "houseRules", "bookingSettings"] as const;
+type TabKey = (typeof TAB_KEYS)[number];
 
 interface LocationFormProps {
-  initialData?: {
-    id: string;
-    name: string;
-    slug: string;
-    address: string | null;
-    city: string | null;
-    country: string;
-    amenities: string | null;
-    rules: string | null;
-    gateCode: string | null;
-    parkingInfo: string | null;
-    buildingAccess: string | null;
-    quietHoursStart: string | null;
-    checkInTime: string | null;
-    checkOutTime: string | null;
-    quietHoursEnd: string | null;
-    localTips: string | null;
-    emergencyPhone: string | null;
-    contacts: { id: string; category: string; name: string; phone: string; notes: string | null; icon: string | null; displayOrder: number }[];
-  };
+  initialData?: Location;
 }
 
 export function LocationForm({ initialData }: LocationFormProps) {
@@ -89,80 +42,20 @@ export function LocationForm({ initialData }: LocationFormProps) {
   const [isPending, startTransition] = useTransition();
   const isEditing = !!initialData;
 
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    if (typeof window === "undefined") return "basic";
+    const q = new URLSearchParams(window.location.search).get("tab");
+    return (TAB_KEYS as readonly string[]).includes(q ?? "") ? (q as TabKey) : "basic";
+  });
+
   const [name, setName] = useState(initialData?.name ?? "");
   const [address, setAddress] = useState(initialData?.address ?? "");
   const [city, setCity] = useState(initialData?.city ?? "");
   const [country, setCountry] = useState(initialData?.country ?? "Greece");
   const [slug, setSlug] = useState(initialData?.slug ?? "");
 
-  const [amenities, setAmenities] = useState<XeniaAmenity[]>(() => {
-    if (!initialData?.amenities) return [];
-    try {
-      return JSON.parse(initialData.amenities);
-    } catch (e) {
-      console.error("Failed to parse amenities JSON:", e);
-      return [];
-    }
-  });
-  const [newAmenityCategory, setNewAmenityCategory] = useState<AmenityCategory>("pool");
-  const [newAmenityName, setNewAmenityName] = useState("");
-  const [newAmenityHours, setNewAmenityHours] = useState("");
-  const [newAmenityNotes, setNewAmenityNotes] = useState("");
-
-  const [rules, setRules] = useState<XeniaRule[]>(() => {
-    if (!initialData?.rules) return [];
-    try {
-      return JSON.parse(initialData.rules);
-    } catch (e) {
-      console.error("Failed to parse rules JSON:", e);
-      return [];
-    }
-  });
-  const [newRuleText, setNewRuleText] = useState("");
-
-  const [gateCode, setGateCode] = useState(initialData?.gateCode ?? "");
-  const [parkingInfo, setParkingInfo] = useState(initialData?.parkingInfo ?? "");
-  const [buildingAccess, setBuildingAccess] = useState(initialData?.buildingAccess ?? "");
-  const [checkInTime, setCheckInTime] = useState(initialData?.checkInTime ?? "15:00");
-  const [checkOutTime, setCheckOutTime] = useState(initialData?.checkOutTime ?? "11:00");
-  const [quietStart, setQuietStart] = useState(initialData?.quietHoursStart ?? "23:00");
-  const [quietEnd, setQuietEnd] = useState(initialData?.quietHoursEnd ?? "08:00");
-  const [localTips, setLocalTips] = useState(initialData?.localTips ?? "");
-  const [emergencyPhone, setEmergencyPhone] = useState(initialData?.emergencyPhone ?? "");
-
   const handleNameBlur = () => {
     if (!isEditing && name) setSlug(generateSlug(name));
-  };
-
-  const addAmenity = (category?: AmenityCategory, amenityName?: string) => {
-    const cat = category ?? newAmenityCategory;
-    const n = amenityName ?? newAmenityName;
-    if (!n.trim()) return;
-    setAmenities((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), category: cat, name: n.trim(), hours: newAmenityHours || undefined, notes: newAmenityNotes || undefined },
-    ]);
-    setNewAmenityName("");
-    setNewAmenityHours("");
-    setNewAmenityNotes("");
-  };
-
-  const removeAmenity = (id: string) => {
-    setAmenities((prev) => prev.filter((a) => a.id !== id));
-  };
-
-  const addRule = (text?: string) => {
-    const ruleText = text ?? newRuleText;
-    if (!ruleText.trim()) return;
-    setRules((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), category: "general", text: ruleText.trim() },
-    ]);
-    setNewRuleText("");
-  };
-
-  const removeRule = (id: string) => {
-    setRules((prev) => prev.filter((r) => r.id !== id));
   };
 
   const handleSubmit = () => {
@@ -174,17 +67,6 @@ export function LocationForm({ initialData }: LocationFormProps) {
         address: address || undefined,
         city: city || undefined,
         country: country || undefined,
-        amenities: JSON.stringify(amenities),
-        rules: JSON.stringify(rules),
-        gateCode: gateCode || undefined,
-        parkingInfo: parkingInfo || undefined,
-        buildingAccess: buildingAccess || undefined,
-        checkInTime: checkInTime || undefined,
-        checkOutTime: checkOutTime || undefined,
-        localTips: localTips || undefined,
-        emergencyPhone: emergencyPhone || undefined,
-        quietHoursStart: quietStart || undefined,
-        quietHoursEnd: quietEnd || undefined,
       };
 
       if (isEditing) {
@@ -199,7 +81,7 @@ export function LocationForm({ initialData }: LocationFormProps) {
         const result = await createLocation(data);
         if (result.success && result.location) {
           toast.success(t("created"));
-          router.push(`/admin/properties/new?locationId=${result.location.id}&firstUnit=1`);
+          router.push(`/admin/units/new?propertyId=${result.location.id}&firstUnit=1`);
         } else {
           toast.error(result.error);
         }
@@ -210,7 +92,7 @@ export function LocationForm({ initialData }: LocationFormProps) {
   // Create mode: simplified single-tab flow (basic info only, redirect to unit after)
   if (!isEditing) {
     return (
-      <div className="space-y-8">
+      <div className="mx-auto w-full max-w-3xl space-y-8">
         <WizardSteps
           currentStep={1}
           steps={[
@@ -219,329 +101,237 @@ export function LocationForm({ initialData }: LocationFormProps) {
           ]}
         />
 
-        <div className="mx-auto max-w-2xl">
-          <div className="rounded-2xl bg-xenia-surface-low p-6 sm:p-8">
-            <h3 className="text-lg font-semibold">{t("wizard.propertyBasics")}</h3>
-            <p className="mb-6 mt-1 text-sm text-muted-foreground">
-              {t("wizard.propertyBasicsHint")}
-            </p>
+        <div className="rounded-2xl border border-border/40 bg-card p-6 shadow-xenia sm:p-8">
+          <h3 className="text-lg font-semibold">{t("wizard.propertyBasics")}</h3>
+          <p className="mb-4 mt-1 text-sm text-muted-foreground">
+            {t("wizard.propertyBasicsHint")}
+          </p>
 
-            <div className="space-y-4">
+          <div className="mb-6 flex items-start gap-3 rounded-lg bg-primary/5 p-3 text-sm">
+            <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+            <p className="text-muted-foreground">{t("wizard.singleUnitNote")}</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>
+                <Building2 className="inline size-3.5" /> {t("basic.name")}
+              </Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={handleNameBlur}
+                placeholder={t("basic.namePlaceholder")}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>
+                <MapPin className="inline size-3.5" /> {t("basic.address")}
+              </Label>
+              <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>
-                  <Building2 className="inline size-3.5" /> {t("basic.name")}
-                </Label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  onBlur={handleNameBlur}
-                  placeholder={t("basic.namePlaceholder")}
-                  required
-                />
+                <Label>{t("basic.city")}</Label>
+                <Input value={city} onChange={(e) => setCity(e.target.value)} />
               </div>
               <div className="space-y-2">
                 <Label>
-                  <MapPin className="inline size-3.5" /> {t("basic.address")}
+                  <Globe className="inline size-3.5" /> {t("basic.country")}
                 </Label>
-                <Input
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>{t("basic.city")}</Label>
-                  <Input
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>
-                    <Globe className="inline size-3.5" /> {t("basic.country")}
-                  </Label>
-                  <Input
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                  />
-                </div>
+                <Input value={country} onChange={(e) => setCountry(e.target.value)} />
               </div>
             </div>
+            {slug && (
+              <p className="text-sm text-muted-foreground">
+                {t("basic.guestUrl")}:{" "}
+                <code className="rounded bg-muted px-1 py-0.5">
+                  {GUEST_BASE_URL}/{slug}
+                </code>
+              </p>
+            )}
           </div>
+        </div>
 
-          <div className="mt-6 flex items-center justify-end">
-            <Button
-              onClick={handleSubmit}
-              loading={isPending}
-              className="cursor-pointer"
-              size="lg"
-            >
-              {isPending ? t("saving") : t("nextAddUnit")}
-              <ArrowRight className="ml-1 size-4" />
-            </Button>
-          </div>
+        <div className="flex items-center justify-end">
+          <Button
+            onClick={handleSubmit}
+            loading={isPending}
+            className="cursor-pointer"
+            size="lg"
+          >
+            {isPending ? t("saving") : t("nextAddUnit")}
+            <ArrowRight className="ml-1 size-4" />
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <Tabs defaultValue="basic" className="space-y-6">
-      <TabsList className="w-full justify-start">
-        <TabsTrigger value="basic" className="cursor-pointer">{t("tabs.basic")}</TabsTrigger>
-        <TabsTrigger value="amenities" className="cursor-pointer">{t("tabs.amenities")}</TabsTrigger>
-        <TabsTrigger value="rules" className="cursor-pointer">{t("tabs.rules")}</TabsTrigger>
-        <TabsTrigger value="contacts" className="cursor-pointer">{t("tabs.contacts")}</TabsTrigger>
+    <Tabs
+      value={activeTab}
+      orientation="vertical"
+      onValueChange={(v) => {
+        setActiveTab(v as TabKey);
+        scrollAdminShellTop();
+      }}
+      className="flex flex-col gap-6 lg:flex-row lg:items-start"
+    >
+      <TabsList className="flex h-auto gap-1 overflow-x-auto bg-transparent p-0 lg:sticky lg:top-6 lg:w-56 lg:shrink-0 lg:flex-col lg:overflow-visible">
+        {TAB_KEYS.map((tab) => (
+          <TabsTrigger
+            key={tab}
+            value={tab}
+            className="cursor-pointer justify-start whitespace-nowrap rounded-lg px-4 py-2.5 text-left text-sm font-medium data-[state=active]:bg-primary data-[state=active]:text-primary-foreground lg:w-full"
+          >
+            {t(`tabs.${tab}` as never)}
+          </TabsTrigger>
+        ))}
       </TabsList>
 
-      <TabsContent value="basic" className="space-y-6">
-        <div className="max-w-2xl space-y-4">
-          <div className="space-y-2">
-            <Label><Building2 className="inline size-3.5" /> {t("basic.name")}</Label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} onBlur={handleNameBlur} placeholder={t("basic.namePlaceholder")} required />
-          </div>
-          <div className="space-y-2">
-            <Label><MapPin className="inline size-3.5" /> {t("basic.address")}</Label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>{t("basic.city")}</Label>
-              <Input value={city} onChange={(e) => setCity(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label><Globe className="inline size-3.5" /> {t("basic.country")}</Label>
-              <Input value={country} onChange={(e) => setCountry(e.target.value)} />
-            </div>
-          </div>
-          {slug && (
-            <p className="text-sm text-muted-foreground">
-              {t("basic.guestUrl")}: <code className="rounded bg-muted px-1 py-0.5">{GUEST_BASE_URL}/{slug}</code>
-            </p>
-          )}
-        </div>
-      </TabsContent>
-
-      <TabsContent value="amenities" className="space-y-6">
-        <div>
-          <h3 className="text-lg font-semibold">{t("amenities.title")}</h3>
-          <p className="text-sm text-muted-foreground">{t("amenities.subtitle")}</p>
-        </div>
-
-        {/* Quick add */}
-        <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">{t("amenities.quickAdd")}</Label>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_AMENITIES.map((qa) => (
-              <Button
-                key={qa.name}
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => addAmenity(qa.category, qa.name)}
-                className="cursor-pointer"
-                icon={<Plus className="size-3" />}
-              >
-                {t(`amenities.categories.${qa.category}` as never)}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Existing amenities */}
-        {amenities.length > 0 && (
-          <div className="space-y-2">
-            {amenities.map((amenity) => (
-              <div key={amenity.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3">
-                <div>
-                  <span className="font-medium">{amenity.name}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    {t(`amenities.categories.${amenity.category}` as never)}
-                  </span>
-                  {amenity.hours && <span className="ml-2 text-xs text-muted-foreground">· {amenity.hours}</span>}
-                  {amenity.notes && <span className="ml-2 text-xs text-muted-foreground">· {amenity.notes}</span>}
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => removeAmenity(amenity.id)} className="size-7 cursor-pointer">
-                  <Trash2 className="size-3.5 text-destructive" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {amenities.length === 0 && (
-          <p className="text-sm text-muted-foreground">{t("amenities.noAmenities")}</p>
-        )}
-
-        {/* Add amenity form */}
-        <Separator />
-        <div className="max-w-xl space-y-3">
-          <Label className="font-medium">{t("amenities.add")}</Label>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">{t("amenities.category")}</Label>
-              <Select value={newAmenityCategory} onValueChange={(v) => setNewAmenityCategory(v as AmenityCategory)}>
-                <SelectTrigger className="cursor-pointer"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {AMENITY_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c} className="cursor-pointer">{t(`amenities.categories.${c}` as never)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">{t("amenities.name")}</Label>
-              <Input value={newAmenityName} onChange={(e) => setNewAmenityName(e.target.value)} placeholder="e.g. Swimming pool" />
-            </div>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">{t("amenities.hours")}</Label>
-              <Input value={newAmenityHours} onChange={(e) => setNewAmenityHours(e.target.value)} placeholder={t("amenities.hoursPlaceholder")} />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs text-muted-foreground">{t("amenities.notes")}</Label>
-              <Input value={newAmenityNotes} onChange={(e) => setNewAmenityNotes(e.target.value)} placeholder={t("amenities.notesPlaceholder")} />
-            </div>
-          </div>
-          <Button type="button" variant="outline" size="sm" onClick={() => addAmenity()} className="cursor-pointer" icon={<Plus className="size-3" />}>
-            {t("amenities.add")}
-          </Button>
-        </div>
-      </TabsContent>
-
-      <TabsContent value="rules" className="space-y-6">
-        <h3 className="text-lg font-semibold">{t("rules.title")}</h3>
-
-        <div className="max-w-xl space-y-6">
-          {/* Check-in / out times */}
-          <div className="space-y-2">
-            <Label><Clock className="inline size-3.5" /> {t("rules.checkInOut")}</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">{t("rules.checkInTime")}</Label>
-                <Input type="time" value={checkInTime} onChange={(e) => setCheckInTime(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">{t("rules.checkOutTime")}</Label>
-                <Input type="time" value={checkOutTime} onChange={(e) => setCheckOutTime(e.target.value)} />
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Quiet hours */}
-          <div className="space-y-2">
-            <Label><Clock className="inline size-3.5" /> {t("rules.quietHours")}</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">{t("rules.quietStart")}</Label>
-                <Input type="time" value={quietStart} onChange={(e) => setQuietStart(e.target.value)} />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground">{t("rules.quietEnd")}</Label>
-                <Input type="time" value={quietEnd} onChange={(e) => setQuietEnd(e.target.value)} />
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Access info */}
+      <div className="min-w-0 flex-1 space-y-6">
+        <TabsContent
+          value="basic"
+          className="rounded-2xl border border-border/40 bg-card p-6 shadow-xenia sm:p-8"
+        >
           <div className="space-y-4">
-            <Label className="font-medium">{t("rules.access")}</Label>
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground"><Key className="inline size-3.5" /> {t("rules.gateCode")}</Label>
-              <Input value={gateCode} onChange={(e) => setGateCode(e.target.value)} />
+              <Label>
+                <Building2 className="inline size-3.5" /> {t("basic.name")}
+              </Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onBlur={handleNameBlur}
+                placeholder={t("basic.namePlaceholder")}
+                required
+              />
             </div>
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground"><ParkingCircle className="inline size-3.5" /> {t("rules.parkingInfo")}</Label>
-              <Input value={parkingInfo} onChange={(e) => setParkingInfo(e.target.value)} />
+              <Label>
+                <MapPin className="inline size-3.5" /> {t("basic.address")}
+              </Label>
+              <Input value={address} onChange={(e) => setAddress(e.target.value)} />
             </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">{t("rules.buildingAccess")}</Label>
-              <Textarea value={buildingAccess} onChange={(e) => setBuildingAccess(e.target.value)} placeholder={t("rules.buildingAccessPlaceholder")} rows={3} />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground"><Phone className="inline size-3.5" /> {t("rules.emergencyPhone")}</Label>
-              <Input type="tel" value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} placeholder="+30 ..." />
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Local tips for AI */}
-          <div className="space-y-2">
-            <Label className="font-medium"><Sparkles className="inline size-3.5" /> {t("rules.localTips")}</Label>
-            <p className="text-xs text-muted-foreground">{t("rules.localTipsHint")}</p>
-            <Textarea
-              value={localTips}
-              onChange={(e) => setLocalTips(e.target.value)}
-              placeholder={t("rules.localTipsPlaceholder")}
-              rows={6}
-            />
-            <p className="text-right text-xs text-muted-foreground">{localTips.length} characters</p>
-          </div>
-
-          <Separator />
-
-          {/* House rules */}
-          <div className="space-y-3">
-            <Label className="font-medium">{t("rules.houseRules")}</Label>
-
-            {/* Quick add rules */}
-            <div className="flex flex-wrap gap-2">
-              {QUICK_RULES.map((rule) => (
-                <Button key={rule} type="button" variant="outline" size="sm" onClick={() => addRule(rule)} className="cursor-pointer" icon={<Plus className="size-3" />}>
-                  {rule}
-                </Button>
-              ))}
-            </div>
-
-            {/* Existing rules */}
-            {rules.length > 0 && (
-              <div className="space-y-1">
-                {rules.map((rule) => (
-                  <div key={rule.id} className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-2">
-                    <span className="text-sm">{rule.text}</span>
-                    <Button variant="ghost" size="icon" onClick={() => removeRule(rule.id)} className="size-7 cursor-pointer">
-                      <Trash2 className="size-3.5 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>{t("basic.city")}</Label>
+                <Input value={city} onChange={(e) => setCity(e.target.value)} />
               </div>
-            )}
-
-            {rules.length === 0 && (
-              <p className="text-sm text-muted-foreground">{t("rules.noRules")}</p>
-            )}
-
-            {/* Add rule */}
-            <div className="flex gap-2">
-              <Input value={newRuleText} onChange={(e) => setNewRuleText(e.target.value)} placeholder={t("rules.rulePlaceholder")} onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRule())} />
-              <Button type="button" variant="outline" size="sm" onClick={() => addRule()} className="shrink-0 cursor-pointer" icon={<Plus className="size-3" />}>
-                {t("rules.addRule")}
-              </Button>
+              <div className="space-y-2">
+                <Label>
+                  <Globe className="inline size-3.5" /> {t("basic.country")}
+                </Label>
+                <Input value={country} onChange={(e) => setCountry(e.target.value)} />
+              </div>
             </div>
+            {slug && (
+              <p className="text-sm text-muted-foreground">
+                {t("basic.guestUrl")}:{" "}
+                <code className="rounded bg-muted px-1 py-0.5">
+                  {GUEST_BASE_URL}/{slug}
+                </code>
+              </p>
+            )}
           </div>
-        </div>
-      </TabsContent>
-
-      {isEditing && (
-        <TabsContent value="contacts">
-          <ContactsSection locationId={initialData.id} initialContacts={initialData.contacts} />
         </TabsContent>
-      )}
 
-      <Button
-        onClick={handleSubmit}
-        loading={isPending}
-        icon={<Save className="size-4" />}
-        className="cursor-pointer"
-      >
-        {isPending ? t("saving") : t("save")}
-      </Button>
+        <TabsContent
+          value="photos"
+          className="rounded-2xl border border-border/40 bg-card p-6 shadow-xenia sm:p-8"
+        >
+          {initialData && (
+            <PhotosTab
+              locationId={initialData.id}
+              initialCoverPhoto={initialData.coverPhoto}
+              initialPhotos={initialData.photos}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent
+          value="facilities"
+          className="rounded-2xl border border-border/40 bg-card p-6 shadow-xenia sm:p-8"
+        >
+          {initialData && (
+            <AmenitiesTab
+              locationId={initialData.id}
+              initialAmenities={initialData.amenities}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent
+          value="houseRules"
+          className="rounded-2xl border border-border/40 bg-card p-6 shadow-xenia sm:p-8"
+        >
+          {initialData && (
+            <RulesTab
+              locationId={initialData.id}
+              initialData={{
+                rules: initialData.rules,
+                checkInTime: initialData.checkInTime,
+                checkOutTime: initialData.checkOutTime,
+                quietHoursStart: initialData.quietHoursStart,
+                quietHoursEnd: initialData.quietHoursEnd,
+                gateCode: initialData.gateCode,
+                parkingInfo: initialData.parkingInfo,
+                buildingAccess: initialData.buildingAccess,
+                emergencyPhone: initialData.emergencyPhone,
+                localTips: initialData.localTips,
+                smokingPolicy: initialData.smokingPolicy,
+                petsPolicy: initialData.petsPolicy,
+                partiesPolicy: initialData.partiesPolicy,
+                childrenPolicy: initialData.childrenPolicy,
+                maxGuests: initialData.maxGuests,
+              }}
+            />
+          )}
+        </TabsContent>
+
+        <TabsContent
+          value="bookingSettings"
+          className="rounded-2xl border border-border/40 bg-card p-6 shadow-xenia sm:p-8"
+        >
+          {initialData && (
+            <BookingSettingsTab
+              locationId={initialData.id}
+              initialData={{
+                baseNightlyRate: initialData.baseNightlyRate,
+                cleaningFee: initialData.cleaningFee,
+                cityTax: initialData.cityTax,
+                securityDeposit: initialData.securityDeposit,
+                minStayDefault: initialData.minStayDefault,
+                minStayPeak: initialData.minStayPeak,
+                peakSeasonStart: initialData.peakSeasonStart,
+                peakSeasonEnd: initialData.peakSeasonEnd,
+                instantBook: initialData.instantBook,
+                cancellationPolicy: initialData.cancellationPolicy,
+                advanceNotice: initialData.advanceNotice,
+                bookingWindow: initialData.bookingWindow,
+                paymentMethod: initialData.paymentMethod,
+                depositPercent: initialData.depositPercent,
+              }}
+            />
+          )}
+        </TabsContent>
+
+        {activeTab === "basic" && (
+          <div className="flex justify-end">
+            <Button
+              onClick={handleSubmit}
+              loading={isPending}
+              icon={<Save className="size-4" />}
+              className="cursor-pointer"
+              size="lg"
+            >
+              {isPending ? t("saving") : t("save")}
+            </Button>
+          </div>
+        )}
+      </div>
     </Tabs>
   );
 }

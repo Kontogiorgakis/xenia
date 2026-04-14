@@ -2,7 +2,6 @@ import {
   Building2,
   Edit,
   MapPin,
-  Phone,
   Plus,
 } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -24,8 +23,12 @@ const PropertiesPage = async ({ params }: BasePageProps) => {
   const t = await getTranslations("Admin.locations");
   const tp = await getTranslations("Admin.properties");
 
-  const locationsResult = await getLocations();
-  const locations = locationsResult.locations;
+  const [activeResult, archivedResult] = await Promise.all([
+    getLocations(),
+    getLocations(true),
+  ]);
+  const locations = activeResult.locations;
+  const archivedLocations = archivedResult.locations.filter((l) => l.archivedAt);
   const hasContent = locations.length > 0;
 
   return (
@@ -38,7 +41,7 @@ const PropertiesPage = async ({ params }: BasePageProps) => {
           </TypographyRegular>
         </div>
         <Button asChild icon={<Plus className="size-4" />} className="cursor-pointer">
-          <Link href="/admin/locations/new">{t("addLocation")}</Link>
+          <Link href="/admin/properties/new">{t("addLocation")}</Link>
         </Button>
       </div>
 
@@ -52,7 +55,7 @@ const PropertiesPage = async ({ params }: BasePageProps) => {
             </TypographyRegular>
             <div className="flex gap-2">
               <Button asChild icon={<Plus className="size-4" />} className="cursor-pointer">
-                <Link href="/admin/locations/new">{t("addLocation")}</Link>
+                <Link href="/admin/properties/new">{t("addLocation")}</Link>
               </Button>
             </div>
           </CardContent>
@@ -77,17 +80,12 @@ const PropertiesPage = async ({ params }: BasePageProps) => {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Button asChild variant="outline" size="sm" className="cursor-pointer">
-                      <Link href={`/admin/locations/${location.id}`}>
+                      <Link href={`/admin/properties/${location.id}`}>
                         <Edit className="mr-1 size-3" /> {t("editLocation")}
                       </Link>
                     </Button>
                     <Button asChild variant="outline" size="sm" className="cursor-pointer">
-                      <Link href={`/admin/locations/${location.id}/contacts`}>
-                        <Phone className="mr-1 size-3" /> {t("viewContacts")}
-                      </Link>
-                    </Button>
-                    <Button asChild variant="outline" size="sm" className="cursor-pointer">
-                      <Link href={`/admin/properties/new?locationId=${location.id}`}>
+                      <Link href={`/admin/units/new?propertyId=${location.id}`}>
                         <Plus className="mr-1 size-3" /> {t("addProperty")}
                       </Link>
                     </Button>
@@ -106,7 +104,7 @@ const PropertiesPage = async ({ params }: BasePageProps) => {
                       </p>
                     </div>
                     <Button asChild size="sm" className="cursor-pointer">
-                      <Link href={`/admin/properties/new?locationId=${location.id}&firstUnit=1`}>
+                      <Link href={`/admin/units/new?propertyId=${location.id}&firstUnit=1`}>
                         {t("addFirstUnit")}
                       </Link>
                     </Button>
@@ -118,29 +116,48 @@ const PropertiesPage = async ({ params }: BasePageProps) => {
                     {location.properties.map((property) => (
                       <div
                         key={property.id}
-                        className="rounded-lg bg-muted/50 p-4 space-y-2"
+                        className="flex flex-col gap-3 rounded-lg border border-border/40 bg-card p-4 shadow-xenia"
                       >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{property.name}</span>
-                          <PropertyActions
-                            propertyId={property.id}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate font-medium">{property.name}</div>
+                            <PropertySpecs
+                              squareMeters={property.squareMeters}
+                              bedrooms={property.bedrooms}
+                              bathrooms={property.bathrooms}
+                              maxGuests={property.maxGuests}
+                            />
+                          </div>
+                          <div className="flex shrink-0 items-center gap-1">
+                            {property.nightlyRate != null && (
+                              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                                €{property.nightlyRate}/{tp("night")}
+                              </span>
+                            )}
+                            <PropertyActions
+                              propertyId={property.id}
+                              propertyName={property.name}
+                              compact
+                            />
+                          </div>
+                        </div>
+
+                        <PropertyAlert reservations={property.reservations} />
+
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            <span>{tp("reservations")}</span>
+                            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-bold text-foreground">
+                              {property._count.reservations}
+                            </span>
+                          </div>
+                          <UpcomingReservations
+                            reservations={property.reservations}
                             propertyName={property.name}
+                            locale={locale}
                             compact
                           />
                         </div>
-                        <PropertySpecs
-                          squareMeters={property.squareMeters}
-                          bedrooms={property.bedrooms}
-                          bathrooms={property.bathrooms}
-                          maxGuests={property.maxGuests}
-                        />
-                        <PropertyAlert reservations={property.reservations} />
-                        <UpcomingReservations
-                          reservations={property.reservations}
-                          propertyName={property.name}
-                          locale={locale}
-                          compact
-                        />
                       </div>
                     ))}
                   </div>
@@ -150,6 +167,42 @@ const PropertiesPage = async ({ params }: BasePageProps) => {
           ))}
 
         </div>
+      )}
+
+      {archivedLocations.length > 0 && (
+        <details className="group">
+          <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+            {t("archive.showArchived")} ({archivedLocations.length})
+          </summary>
+          <div className="mt-4 space-y-3">
+            {archivedLocations.map((location) => (
+              <Card key={location.id} className="opacity-60">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <MapPin className="size-3.5" />
+                        {location.name}
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
+                          {t("archive.archivedBadge")}
+                        </span>
+                      </CardTitle>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {location.city}
+                        {location.country ? `, ${location.country}` : ""}
+                      </p>
+                    </div>
+                    <Button asChild variant="outline" size="sm" className="cursor-pointer">
+                      <Link href={`/admin/properties/${location.id}`}>
+                        {t("editLocation")}
+                      </Link>
+                    </Button>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </details>
       )}
     </div>
   );

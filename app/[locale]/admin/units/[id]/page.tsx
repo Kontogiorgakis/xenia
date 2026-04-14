@@ -2,23 +2,23 @@ import { ArrowLeft } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
-import { LocationForm } from "@/components/admin/location-form";
+import { PropertyForm } from "@/components/admin/property-form";
 import { Button } from "@/components/ui/button";
 import { TypographyH3 } from "@/components/ui/typography";
 import { Link } from "@/lib/i18n/navigation";
-import { getLocationById } from "@/server_actions/locations";
+import { getPropertyById } from "@/server_actions/properties";
 
-interface LocationEditPageProps {
+interface PropertyEditPageProps {
   params: Promise<{ locale: string; id: string }>;
 }
 
-const LocationEditPage = async ({ params }: LocationEditPageProps) => {
+const PropertyEditPage = async ({ params }: PropertyEditPageProps) => {
   const { locale, id } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("Admin.locations");
+  const t = await getTranslations("Admin.properties");
 
-  const result = await getLocationById(id);
-  if (!result.success || !result.location) {
+  const result = await getPropertyById(id);
+  if (!result.success || !result.property) {
     notFound();
   }
 
@@ -30,11 +30,11 @@ const LocationEditPage = async ({ params }: LocationEditPageProps) => {
             <ArrowLeft className="size-4" />
           </Link>
         </Button>
-        <TypographyH3>{t("editLocation")} — {result.location.name}</TypographyH3>
+        <TypographyH3>{t("editProperty")}</TypographyH3>
       </div>
-      <LocationForm initialData={result.location} />
+      <PropertyForm initialData={result.property} />
     </div>
   );
 };
 
-export default LocationEditPage;
+export default PropertyEditPage;
