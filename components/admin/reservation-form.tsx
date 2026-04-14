@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { GUEST_BASE_URL, RESERVATION_SOURCES, RESERVATION_STATUSES } from "@/lib/admin/constants";
+import { formatDateForInput } from "@/lib/general/utils";
 import { useRouter } from "@/lib/i18n/navigation";
 import { getAvailableProperties } from "@/server_actions/properties";
 import { createReservation, updateReservation } from "@/server_actions/reservations";
@@ -49,11 +50,6 @@ interface ReservationFormProps {
     status: string;
     guestToken: string;
   };
-}
-
-function formatDateForInput(d: Date | string): string {
-  const date = typeof d === "string" ? new Date(d) : d;
-  return date.toISOString().split("T")[0];
 }
 
 export function ReservationForm({ properties, initialData }: ReservationFormProps) {

@@ -1,28 +1,34 @@
-import { MessageSquare } from "lucide-react";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { setRequestLocale } from "next-intl/server";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { TypographyH3, TypographyRegular } from "@/components/ui/typography";
+import { InboxClient } from "@/components/admin/inbox/inbox-client";
+import { getInboxCounts, getInquiries } from "@/server_actions/inquiries";
+import { getLocations } from "@/server_actions/locations";
 import { BasePageProps } from "@/types/page-props";
 
 const InboxPage = async ({ params }: BasePageProps) => {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations("Admin.inbox");
+
+  const [inquiriesResult, countsResult, locationsResult] = await Promise.all([
+    getInquiries(),
+    getInboxCounts(),
+    getLocations(),
+  ]);
 
   return (
-    <div className="space-y-6">
-      <TypographyH3>{t("title")}</TypographyH3>
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-16">
-          <MessageSquare className="mb-4 size-16 text-muted-foreground/50" />
-          <TypographyH3 className="mb-2">{t("comingSoon")}</TypographyH3>
-          <TypographyRegular className="max-w-md text-center text-muted-foreground">
-            {t("comingSoonHint")}
-          </TypographyRegular>
-        </CardContent>
-      </Card>
-    </div>
+    <InboxClient
+      locale={locale}
+      initialInquiries={inquiriesResult.inquiries}
+      initialCounts={countsResult.counts}
+      locations={locationsResult.locations.map((l) => ({
+        id: l.id,
+        name: l.name,
+        baseNightlyRate: l.baseNightlyRate,
+        cleaningFee: l.cleaningFee,
+        cityTax: l.cityTax,
+        properties: l.properties.map((p) => ({ id: p.id, name: p.name })),
+      }))}
+    />
   );
 };
 

@@ -28,7 +28,7 @@ export const adminNavItems: Record<string, AdminNavItem[]> = {
     { label: "Guestbook", href: "guestbook", icon: BookOpen },
   ],
   Communication: [
-    { label: "Inbox", href: "inbox", icon: MessageSquare, badge: "soon" },
+    { label: "Inbox", href: "inbox", icon: MessageSquare },
   ],
   Guests: [{ label: "Guests", href: "guests", icon: Users }],
   Account: [{ label: "Settings", href: "settings", icon: Settings }],
