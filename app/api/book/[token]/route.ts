@@ -20,7 +20,6 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     guestNationality?: string;
     numberOfGuests?: number;
     specialRequests?: string;
-    message?: string;
     unitId?: string;
   };
   try {
@@ -56,50 +55,6 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       new Date(data.checkOut)
     );
     return NextResponse.json(result);
-  }
-
-  if (action === "submit_inquiry") {
-    if (!data.guestName || !data.guestEmail || !data.checkIn || !data.checkOut) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-    const inquiry = await prisma.inquiry.create({
-      data: {
-        locationId: location.id,
-        type: "booking",
-        guestName: data.guestName,
-        guestEmail: data.guestEmail,
-        guestPhone: data.guestPhone || null,
-        guestNationality: data.guestNationality || null,
-        checkIn: new Date(data.checkIn),
-        checkOut: new Date(data.checkOut),
-        numberOfGuests: data.numberOfGuests ?? 1,
-        specialRequests: data.specialRequests || null,
-        message: data.message || null,
-        unitId: data.unitId || null,
-        source: "booking_page",
-        status: "new",
-      },
-    });
-    return NextResponse.json({ success: true, inquiryId: inquiry.id });
-  }
-
-  if (action === "submit_question") {
-    if (!data.guestName || !data.guestEmail || !data.message) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-    const inquiry = await prisma.inquiry.create({
-      data: {
-        locationId: location.id,
-        type: "question",
-        guestName: data.guestName,
-        guestEmail: data.guestEmail,
-        guestPhone: data.guestPhone || null,
-        message: data.message,
-        source: "booking_page",
-        status: "new",
-      },
-    });
-    return NextResponse.json({ success: true, inquiryId: inquiry.id });
   }
 
   if (action === "instant_book") {

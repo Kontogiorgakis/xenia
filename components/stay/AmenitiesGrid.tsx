@@ -1,19 +1,9 @@
 "use client";
 
-import {
-  Bell,
-  Car,
-  Dumbbell,
-  Flame,
-  Flower2,
-  Grid,
-  Sparkles,
-  Star,
-  UtensilsCrossed,
-  Waves,
-  WashingMachine,
-} from "lucide-react";
+import { Grid, Star } from "lucide-react";
 import { useTranslations } from "next-intl";
+
+import { AMENITY_ICONS } from "@/lib/general/amenity-icons";
 
 import { SectionTitle } from "./SectionTitle";
 
@@ -28,19 +18,6 @@ interface Amenity {
 interface AmenitiesGridProps {
   amenities: Amenity[];
 }
-
-const AMENITY_ICONS: Record<string, typeof Star> = {
-  pool: Waves,
-  parking: Car,
-  bbq: Flame,
-  garden: Flower2,
-  gym: Dumbbell,
-  spa: Sparkles,
-  laundry: WashingMachine,
-  reception: Bell,
-  restaurant: UtensilsCrossed,
-  other: Star,
-};
 
 export function AmenitiesGrid({ amenities }: AmenitiesGridProps) {
   const t = useTranslations("Stay");

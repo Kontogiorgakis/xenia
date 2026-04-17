@@ -107,28 +107,6 @@ const ReservationsPage = async ({
         </Button>
       </div>
 
-      {/* Filter Tabs */}
-      <Tabs value={currentFilter}>
-        <TabsList>
-          <TabsTrigger value="all" asChild className="cursor-pointer">
-            <Link href="/admin/reservations">{t("all")}</Link>
-          </TabsTrigger>
-          <TabsTrigger value="upcoming" asChild className="cursor-pointer">
-            <Link href="/admin/reservations?status=upcoming">
-              {t("upcoming")}
-            </Link>
-          </TabsTrigger>
-          <TabsTrigger value="active" asChild className="cursor-pointer">
-            <Link href="/admin/reservations?status=active">{t("active")}</Link>
-          </TabsTrigger>
-          <TabsTrigger value="completed" asChild className="cursor-pointer">
-            <Link href="/admin/reservations?status=completed">
-              {t("completed")}
-            </Link>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       {reservations.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -143,6 +121,29 @@ const ReservationsPage = async ({
           </CardContent>
         </Card>
       ) : (
+        <>
+          {/* Filter Tabs */}
+          <Tabs value={currentFilter}>
+            <TabsList>
+              <TabsTrigger value="all" asChild className="cursor-pointer">
+                <Link href="/admin/reservations">{t("all")}</Link>
+              </TabsTrigger>
+              <TabsTrigger value="upcoming" asChild className="cursor-pointer">
+                <Link href="/admin/reservations?status=upcoming">
+                  {t("upcoming")}
+                </Link>
+              </TabsTrigger>
+              <TabsTrigger value="active" asChild className="cursor-pointer">
+                <Link href="/admin/reservations?status=active">{t("active")}</Link>
+              </TabsTrigger>
+              <TabsTrigger value="completed" asChild className="cursor-pointer">
+                <Link href="/admin/reservations?status=completed">
+                  {t("completed")}
+                </Link>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
         <Card>
           <CardHeader>
             <CardTitle>
@@ -214,6 +215,7 @@ const ReservationsPage = async ({
             </Table>
           </CardContent>
         </Card>
+        </>
       )}
     </div>
   );

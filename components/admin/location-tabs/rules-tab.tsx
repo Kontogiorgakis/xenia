@@ -6,9 +6,11 @@ import {
   ParkingCircle,
   Phone,
   Plus,
+  RefreshCw,
   Save,
   Sparkles,
   Trash2,
+  Wifi,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -20,7 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { parseJsonArray } from "@/lib/general/utils";
-import { updateLocation } from "@/server_actions/locations";
+import { syncWifiToUnits, updateLocation } from "@/server_actions/locations";
 import { XeniaRule } from "@/types/xenia";
 
 import { PoliciesSection } from "./policies-section";
@@ -38,6 +40,8 @@ interface RulesTabProps {
     gateCode: string | null;
     parkingInfo: string | null;
     buildingAccess: string | null;
+    wifiName: string | null;
+    wifiPassword: string | null;
     emergencyPhone: string | null;
     localTips: string | null;
     smokingPolicy: string | null;
@@ -64,6 +68,9 @@ export function RulesTab({ locationId, initialData }: RulesTabProps) {
   const [gateCode, setGateCode] = useState(initialData.gateCode ?? "");
   const [parkingInfo, setParkingInfo] = useState(initialData.parkingInfo ?? "");
   const [buildingAccess, setBuildingAccess] = useState(initialData.buildingAccess ?? "");
+  const [wifiName, setWifiName] = useState(initialData.wifiName ?? "");
+  const [wifiPassword, setWifiPassword] = useState(initialData.wifiPassword ?? "");
+  const [showPassword, setShowPassword] = useState(false);
   const [emergencyPhone, setEmergencyPhone] = useState(initialData.emergencyPhone ?? "");
   const [localTips, setLocalTips] = useState(initialData.localTips ?? "");
 
@@ -92,6 +99,8 @@ export function RulesTab({ locationId, initialData }: RulesTabProps) {
         gateCode: gateCode || undefined,
         parkingInfo: parkingInfo || undefined,
         buildingAccess: buildingAccess || undefined,
+        wifiName: wifiName || null,
+        wifiPassword: wifiPassword || null,
         emergencyPhone: emergencyPhone || undefined,
         localTips: localTips || undefined,
       });
@@ -202,6 +211,61 @@ export function RulesTab({ locationId, initialData }: RulesTabProps) {
               rows={3}
             />
           </div>
+          {/* WiFi */}
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">
+              <Wifi className="inline size-3.5" /> {t("rules.wifiName")}
+            </Label>
+            <Input
+              value={wifiName}
+              onChange={(e) => setWifiName(e.target.value)}
+              placeholder="MyNetwork-5G"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">
+              <Key className="inline size-3.5" /> {t("rules.wifiPassword")}
+            </Label>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={wifiPassword}
+                onChange={(e) => setWifiPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer text-xs text-muted-foreground hover:text-foreground"
+              >
+                {showPassword ? t("rules.hide") : t("rules.show")}
+              </button>
+            </div>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="cursor-pointer"
+            icon={<RefreshCw className="size-3" />}
+            onClick={() => {
+              startTransition(async () => {
+                // Save WiFi first, then sync
+                await updateLocation(locationId, {
+                  wifiName: wifiName || null,
+                  wifiPassword: wifiPassword || null,
+                });
+                const result = await syncWifiToUnits(locationId);
+                if (result.success) toast.success(t("rules.syncWifiSuccess"));
+                else toast.error(result.error);
+              });
+            }}
+            loading={isPending}
+            disabled={!wifiName && !wifiPassword}
+          >
+            {t("rules.syncWifi")}
+          </Button>
+          <p className="text-xs text-muted-foreground">{t("rules.syncWifiHint")}</p>
+
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">
               <Phone className="inline size-3.5" /> {t("rules.emergencyPhone")}

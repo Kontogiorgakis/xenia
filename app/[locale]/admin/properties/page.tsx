@@ -1,4 +1,4 @@
-import { Building2, MapPin, Plus } from "lucide-react";
+import { Home, MapPin, Plus } from "lucide-react";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import {
@@ -35,21 +35,21 @@ const PropertiesPage = async ({ params }: BasePageProps) => {
           </TypographyRegular>
         </div>
         <Button asChild icon={<Plus className="size-4" />} className="cursor-pointer">
-          <Link href="/admin/properties/new">{t("addLocation")}</Link>
+          <Link href="/admin/properties/setup">{t("addLocation")}</Link>
         </Button>
       </div>
 
       {!hasContent ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Building2 className="mb-4 size-12 text-muted-foreground" />
+            <Home className="mb-4 size-12 text-muted-foreground" />
             <TypographyH3>{t("noLocations")}</TypographyH3>
             <TypographyRegular className="mb-6 text-center text-muted-foreground">
               {t("noLocationsHint")}
             </TypographyRegular>
             <div className="flex gap-2">
               <Button asChild icon={<Plus className="size-4" />} className="cursor-pointer">
-                <Link href="/admin/properties/new">{t("addLocation")}</Link>
+                <Link href="/admin/properties/setup">{t("addLocation")}</Link>
               </Button>
             </div>
           </CardContent>
@@ -63,6 +63,12 @@ const PropertiesPage = async ({ params }: BasePageProps) => {
             city: l.city,
             country: l.country,
             coverPhoto: l.coverPhoto,
+            isSingleUnit: l.isSingleUnit,
+            amenities: l.amenities,
+            bookingToken: l.bookingToken,
+            bookingEnabled: l.bookingEnabled,
+            checkInTime: l.checkInTime,
+            checkOutTime: l.checkOutTime,
             properties: l.properties.map((p) => ({
               id: p.id,
               name: p.name,
@@ -71,6 +77,7 @@ const PropertiesPage = async ({ params }: BasePageProps) => {
               bathrooms: p.bathrooms,
               maxGuests: p.maxGuests,
               nightlyRate: p.nightlyRate,
+              wifiName: p.wifiName,
               reservations: p.reservations,
               _count: p._count,
             })),

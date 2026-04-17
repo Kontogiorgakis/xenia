@@ -9,7 +9,6 @@ import {
   ExternalLink,
   Loader2,
   MapPin,
-  MessageCircle,
   Moon,
   Ruler,
   Sparkles,
@@ -60,7 +59,7 @@ interface BookingPageClientProps {
 }
 
 type Step = "dates" | "details";
-type View = "landing" | "book" | "ask";
+type View = "landing" | "book";
 
 const STRINGS = {
   en: {
@@ -90,21 +89,12 @@ const STRINGS = {
       "Anything we should know? e.g. anniversary, dietary needs, arrival time…",
     agreeRules: "I have read and agree to the house rules",
     confirmBooking: "Confirm booking",
-    sendInquiry: "Send booking inquiry",
     back: "Back",
     continueToDetails: "Continue",
     bookingConfirmed: "Booking confirmed",
-    inquirySent: "Inquiry sent",
     thankYou: "Thank you",
     openGuestPage: "Open your guest page",
     notAvailable: "These dates aren't available",
-    haveQuestion: "Have a question?",
-    haveQuestionHint: "Send the host a quick message",
-    yourName: "Your name",
-    yourEmail: "Your email",
-    yourQuestion: "Your question",
-    sendQuestion: "Send question",
-    questionSent: "Your question has been sent. The host will reply soon.",
     contactForPricing: "Contact the host for pricing",
     chooseApartment: "Choose your apartment",
     paymentNote: "You'll receive payment instructions by email.",
@@ -112,14 +102,10 @@ const STRINGS = {
     checking: "Checking availability…",
     confirmedMessage:
       "Your stay is locked in. A confirmation email is on its way.",
-    inquirySentMessage:
-      "will be in touch within 24 hours to confirm your stay.",
     bookAnother: "Book another stay",
     aboutHost: "Meet your host",
     checkAvailabilityCta: "Check availability & book",
-    askQuestionCta: "Ask a question",
     bookingTitle: "Check availability",
-    askTitle: "Ask a question",
   },
   el: {
     from: "Από",
@@ -148,34 +134,22 @@ const STRINGS = {
       "Θέλετε να μας πείτε κάτι; π.χ. επέτειος, διατροφικές ανάγκες, ώρα άφιξης…",
     agreeRules: "Διάβασα και συμφωνώ με τους κανόνες",
     confirmBooking: "Επιβεβαίωση κράτησης",
-    sendInquiry: "Αποστολή αιτήματος",
     back: "Πίσω",
     continueToDetails: "Συνέχεια",
     bookingConfirmed: "Η κράτηση επιβεβαιώθηκε",
-    inquirySent: "Το αίτημα στάλθηκε",
     thankYou: "Ευχαριστούμε",
     openGuestPage: "Άνοιγμα σελίδας επισκέπτη",
     notAvailable: "Αυτές οι ημερομηνίες δεν είναι διαθέσιμες",
-    haveQuestion: "Έχετε ερώτηση;",
-    haveQuestionHint: "Στείλτε ένα γρήγορο μήνυμα",
-    yourName: "Το όνομά σας",
-    yourEmail: "Το email σας",
-    yourQuestion: "Η ερώτησή σας",
-    sendQuestion: "Αποστολή ερώτησης",
-    questionSent: "Η ερώτησή σας στάλθηκε. Ο οικοδεσπότης θα απαντήσει σύντομα.",
     contactForPricing: "Επικοινωνήστε για τιμολόγηση",
     chooseApartment: "Επιλέξτε διαμέρισμα",
     paymentNote: "Θα λάβετε οδηγίες πληρωμής μέσω email.",
     unitsAvailable: "διαθέσιμα διαμερίσματα",
     checking: "Έλεγχος διαθεσιμότητας…",
     confirmedMessage: "Η διαμονή σας είναι κλεισμένη. Θα λάβετε email επιβεβαίωσης.",
-    inquirySentMessage: "θα επικοινωνήσει μαζί σας εντός 24 ωρών.",
     bookAnother: "Νέα κράτηση",
     aboutHost: "Γνωρίστε τον οικοδεσπότη",
     checkAvailabilityCta: "Έλεγχος διαθεσιμότητας & κράτηση",
-    askQuestionCta: "Κάντε μια ερώτηση",
     bookingTitle: "Έλεγχος διαθεσιμότητας",
-    askTitle: "Κάντε μια ερώτηση",
   },
 };
 
@@ -222,11 +196,8 @@ export function BookingPageClient({
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<{
-    type: "booking" | "inquiry";
     guestToken?: string;
   } | null>(null);
-
-  const isBookingMode = data.bookingMode === "instant_book";
   const brandColor = data.brandColor ?? "#1B4D6E";
   const amenities = useMemo(
     () => parseJsonArray<XeniaAmenity>(data.amenities),
@@ -348,7 +319,7 @@ export function BookingPageClient({
 
     try {
       const payload = {
-        action: isBookingMode ? "instant_book" : "submit_inquiry",
+        action: "instant_book",
         checkIn: range.from.toISOString(),
         checkOut: range.to.toISOString(),
         guestName: `${firstName.trim()} ${lastName.trim()}`,
@@ -373,7 +344,6 @@ export function BookingPageClient({
       }
 
       setConfirmation({
-        type: isBookingMode ? "booking" : "inquiry",
         guestToken: json.guestToken,
       });
       if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -397,13 +367,11 @@ export function BookingPageClient({
               <Check className="size-8" strokeWidth={3} />
             </div>
             <h1 className="mt-6 text-3xl font-bold tracking-tight">
-              {confirmation.type === "booking" ? t.bookingConfirmed : t.inquirySent}
+              {t.bookingConfirmed}
             </h1>
             <p className="mt-3 text-base text-muted-foreground">
               {t.thankYou}, <span className="font-medium text-foreground">{firstName}</span>.
-              {confirmation.type === "booking"
-                ? ` ${t.confirmedMessage}`
-                : ` ${data.hostDisplayName ?? ""} ${t.inquirySentMessage}`}
+              {` ${t.confirmedMessage}`}
             </p>
 
             {range?.from && range?.to && (
@@ -438,7 +406,7 @@ export function BookingPageClient({
               </div>
             )}
 
-            {confirmation.type === "booking" && confirmation.guestToken && (
+            {confirmation.guestToken && (
               <div className="mt-8 space-y-3">
                 <Button
                   asChild
@@ -531,7 +499,7 @@ export function BookingPageClient({
           setSpecialRequests={setSpecialRequests}
           agreeRules={agreeRules}
           setAgreeRules={setAgreeRules}
-          isBookingMode={isBookingMode}
+
           canProceedToDetails={canProceedToDetails}
           canSubmit={!!canSubmit}
           submitting={submitting}
@@ -675,8 +643,8 @@ export function BookingPageClient({
               </div>
             )}
 
-            {/* Two big CTAs */}
-            <div className="space-y-3 pt-2">
+            {/* CTA */}
+            <div className="pt-2">
               <Button
                 onClick={() => setView("book")}
                 size="lg"
@@ -685,15 +653,6 @@ export function BookingPageClient({
               >
                 <CalendarDays className="mr-2 size-5" />
                 {t.checkAvailabilityCta}
-              </Button>
-              <Button
-                onClick={() => setView("ask")}
-                variant="outline"
-                size="lg"
-                className="w-full cursor-pointer rounded-2xl py-6 text-base font-semibold"
-              >
-                <MessageCircle className="mr-2 size-5" />
-                {t.askQuestionCta}
               </Button>
             </div>
           </div>
@@ -749,7 +708,7 @@ export function BookingPageClient({
               setSpecialRequests={setSpecialRequests}
               agreeRules={agreeRules}
               setAgreeRules={setAgreeRules}
-              isBookingMode={isBookingMode}
+    
               canProceedToDetails={canProceedToDetails}
               canSubmit={!!canSubmit}
               submitting={submitting}
@@ -759,25 +718,6 @@ export function BookingPageClient({
           </div>
         )}
 
-        {view === "ask" && (
-          <div className="space-y-5">
-            <button
-              type="button"
-              onClick={() => setView("landing")}
-              className="flex cursor-pointer items-center gap-1.5 text-sm font-medium text-muted-foreground transition hover:text-foreground"
-            >
-              <ArrowLeft className="size-4" />
-              {data.name}
-            </button>
-            <div>
-              <h2 className="text-2xl font-bold tracking-tight">{t.askTitle}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t.haveQuestionHint}
-              </p>
-            </div>
-            <AskQuestionForm token={token} t={t} brandColor={brandColor} />
-          </div>
-        )}
       </main>
     </div>
   );
@@ -816,7 +756,6 @@ interface BookingCardProps {
   setSpecialRequests: (s: string) => void;
   agreeRules: boolean;
   setAgreeRules: (b: boolean) => void;
-  isBookingMode: boolean;
   canProceedToDetails: boolean;
   canSubmit: boolean;
   submitting: boolean;
@@ -857,7 +796,6 @@ function BookingCard(props: BookingCardProps) {
     setSpecialRequests,
     agreeRules,
     setAgreeRules,
-    isBookingMode,
     canProceedToDetails,
     canSubmit,
     submitting,
@@ -1206,105 +1144,13 @@ function BookingCard(props: BookingCardProps) {
                 style={canSubmit ? { backgroundColor: brandColor } : undefined}
               >
                 {submitting && <Loader2 className="mr-1 size-4 animate-spin" />}
-                {isBookingMode ? t.confirmBooking : t.sendInquiry}
+                {t.confirmBooking}
               </Button>
             </div>
           </div>
         )}
       </div>
     </div>
-  );
-}
-
-// ══════════════════ AskQuestionForm ══════════════════
-function AskQuestionForm({
-  token,
-  t,
-  brandColor,
-}: {
-  token: string;
-  t: (typeof STRINGS)[Lang];
-  brandColor: string;
-}) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [question, setQuestion] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [sent, setSent] = useState(false);
-
-  const submit = async () => {
-    if (!name.trim() || !email.trim() || !question.trim()) return;
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/book/${token}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "submit_question",
-          guestName: name.trim(),
-          guestEmail: email.trim(),
-          message: question.trim(),
-        }),
-      });
-      if (res.ok) {
-        setSent(true);
-        setName("");
-        setEmail("");
-        setQuestion("");
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (sent) {
-    return (
-      <section className="rounded-3xl border border-green-500/30 bg-green-50 p-6 text-center text-sm text-green-700 dark:bg-green-950/20 dark:text-green-400">
-        <Check className="mx-auto mb-2 size-6" /> {t.questionSent}
-      </section>
-    );
-  }
-
-  return (
-    <section className="rounded-3xl border border-border/40 bg-card p-6">
-      <h2 className="text-xl font-semibold">{t.haveQuestion}</h2>
-      <p className="mt-0.5 text-sm text-muted-foreground">{t.haveQuestionHint}</p>
-      <div className="mt-4 space-y-3">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input
-            placeholder={t.yourName}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <Input
-            type="email"
-            placeholder={t.yourEmail}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-        <Textarea
-          placeholder={t.yourQuestion}
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          rows={3}
-        />
-        <Button
-          onClick={submit}
-          disabled={submitting || !name.trim() || !email.trim() || !question.trim()}
-          size="lg"
-          className="w-full cursor-pointer text-base font-semibold"
-          style={
-            !submitting && name.trim() && email.trim() && question.trim()
-              ? { backgroundColor: brandColor }
-              : undefined
-          }
-        >
-          {submitting && <Loader2 className="mr-1 size-4 animate-spin" />}
-          {t.sendQuestion}
-        </Button>
-      </div>
-    </section>
   );
 }
 

@@ -7,7 +7,6 @@ import { ErrorPage } from "@/components/error-page";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { authOptions } from "@/lib/auth/auth";
-import { getInboxCounts } from "@/server_actions/inquiries";
 import { BaseLayoutProps } from "@/types/page-props";
 
 const AdminLayout = async ({ children, params }: BaseLayoutProps) => {
@@ -24,18 +23,9 @@ const AdminLayout = async ({ children, params }: BaseLayoutProps) => {
     );
   }
 
-  // Defensive: don't let the badge fetch break the whole admin shell.
-  let inboxUnreadCount = 0;
-  try {
-    const { counts } = await getInboxCounts();
-    inboxUnreadCount = counts.unread;
-  } catch (error) {
-    console.error("Failed to load inbox unread count:", error);
-  }
-
   return (
     <SidebarProvider className="admin-shell">
-      <AdminSidebar inboxUnreadCount={inboxUnreadCount} />
+      <AdminSidebar />
       <SidebarInset className="h-svh max-h-svh overflow-hidden">
         <AdminHeader />
         <ScrollArea className="h-0 flex-1">

@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node screenshot.mjs http://localhost:3000/en/admin/reservations reservations)",
+      "Bash(pnpm lint)",
+      "Bash(npx prisma db push --schema=lib/db/schema.prisma)",
+      "Bash(npx prisma generate --schema=lib/db/schema.prisma)",
+      "Bash(npx prisma:*)",
+      "Bash(1:*)",
+      "Bash(npx tsx -e \":*)",
+      "Bash(node scripts/seed-properties.mjs)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000/en/admin/properties)",
+      "Bash(pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities)"
+    ]
+  }
+}

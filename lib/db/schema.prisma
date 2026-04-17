@@ -85,7 +85,6 @@ model Property {
   location       Location? @relation(fields: [locationId], references: [id])
 
   reservations   Reservation[]
-  inquiries      Inquiry[]
 
   @@index([hostId])
   @@index([locationId])
@@ -118,8 +117,6 @@ model Reservation {
   propertyId       String   @map("property_id")
   property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
-  inquiry          Inquiry?
-
   @@index([propertyId])
   @@index([checkIn])
   @@index([checkOut])
@@ -143,6 +140,9 @@ model Location {
   gateCode        String?  @map("gate_code")
   parkingInfo     String?  @map("parking_info")
   buildingAccess  String?  @map("building_access")
+  wifiName        String?  @map("wifi_name")
+  wifiPassword    String?  @map("wifi_password")
+  checkInMethod   String?  @map("check_in_method")
   quietHoursStart String?  @default("23:00") @map("quiet_hours_start")
   quietHoursEnd   String?  @default("08:00") @map("quiet_hours_end")
   checkInTime     String?  @default("15:00") @map("check_in_time")
@@ -200,6 +200,9 @@ model Location {
   unitSelectionMode     String    @default("auto_assign") @map("unit_selection_mode")
   bookingTokenUpdatedAt DateTime? @map("booking_token_updated_at")
 
+  // Single-unit flag (UI only — hides Location/Unit complexity)
+  isSingleUnit    Boolean   @default(false) @map("is_single_unit")
+
   // Display order (drag-to-reorder on properties list)
   displayOrder    Int       @default(0) @map("display_order")
 
@@ -216,7 +219,6 @@ model Location {
   contacts            Contact[]
   knowledgeEntries    KnowledgeEntry[]
   unansweredQuestions UnansweredQuestion[]
-  inquiries           Inquiry[]
   dateBlocks          DateBlock[]
 
   @@index([hostId])
@@ -276,52 +278,6 @@ model UnansweredQuestion {
 
   @@index([locationId])
   @@map("unanswered_questions")
-}
-
-model Inquiry {
-  id               String    @id @default(cuid())
-
-  type             String    // 'booking' | 'question'
-
-  guestName        String    @map("guest_name")
-  guestEmail       String    @map("guest_email")
-  guestPhone       String?   @map("guest_phone")
-  guestNationality String?   @map("guest_nationality")
-  message          String?
-
-  checkIn          DateTime? @map("check_in")
-  checkOut         DateTime? @map("check_out")
-  numberOfGuests   Int?      @map("number_of_guests")
-  specialRequests  String?   @map("special_requests")
-
-  status           String    @default("new")
-  // 'new' | 'read' | 'replied' | 'converted' | 'closed'
-
-  hostReply        String?   @map("host_reply")
-  repliedAt        DateTime? @map("replied_at")
-
-  source           String    @default("booking_page")
-  // 'booking_page' | 'widget' | 'manual'
-
-  convertedAt      DateTime? @map("converted_at")
-
-  createdAt        DateTime  @default(now()) @map("created_at")
-  updatedAt        DateTime  @updatedAt @map("updated_at")
-
-  locationId       String    @map("location_id")
-  location         Location  @relation(fields: [locationId], references: [id], onDelete: Cascade)
-
-  unitId           String?   @map("unit_id")
-  unit             Property? @relation(fields: [unitId], references: [id])
-
-  reservationId    String?   @unique @map("reservation_id")
-  reservation      Reservation? @relation(fields: [reservationId], references: [id])
-
-  @@index([locationId])
-  @@index([unitId])
-  @@index([status])
-  @@index([type])
-  @@map("inquiries")
 }
 
 model DateBlock {

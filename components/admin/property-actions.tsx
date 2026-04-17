@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Edit, MoreHorizontal, QrCode, Trash2 } from "lucide-react";
+import { Building2, Copy, Edit, MoreHorizontal, QrCode, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -38,15 +38,18 @@ import { deleteProperty, duplicateProperty } from "@/server_actions/properties";
 interface PropertyActionsProps {
   propertyId: string;
   propertyName: string;
+  locationId?: string;
   compact?: boolean;
 }
 
 export function PropertyActions({
   propertyId,
   propertyName,
+  locationId,
   compact = false,
 }: PropertyActionsProps) {
   const t = useTranslations("Admin.properties");
+  const tl = useTranslations("Admin.locations");
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [duplicateOpen, setDuplicateOpen] = useState(false);
@@ -97,6 +100,13 @@ export function PropertyActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {locationId && (
+            <DropdownMenuItem asChild className="cursor-pointer">
+              <Link href={`/admin/properties/${locationId}`}>
+                <Building2 className="mr-2 size-4" /> {tl("editLocation")}
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem asChild className="cursor-pointer">
             <Link href={`/admin/units/${propertyId}`}>
               <Edit className="mr-2 size-4" /> {t("editProperty")}

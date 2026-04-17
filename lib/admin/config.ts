@@ -5,7 +5,6 @@ import {
   ClipboardList,
   LayoutDashboard,
   LucideIcon,
-  MessageSquare,
   Settings,
   Users,
 } from "lucide-react";
@@ -26,9 +25,6 @@ export const adminNavItems: Record<string, AdminNavItem[]> = {
   ],
   "Guest Experience": [
     { label: "Guestbook", href: "guestbook", icon: BookOpen },
-  ],
-  Communication: [
-    { label: "Inbox", href: "inbox", icon: MessageSquare },
   ],
   Guests: [{ label: "Guests", href: "guests", icon: Users }],
   Account: [{ label: "Settings", href: "settings", icon: Settings }],

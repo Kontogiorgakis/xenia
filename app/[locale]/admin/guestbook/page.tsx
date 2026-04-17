@@ -37,7 +37,7 @@ const GuestbookPage = async ({ params }: BasePageProps) => {
               {t("noPropertiesHint")}
             </TypographyRegular>
             <Button asChild icon={<Plus className="size-4" />} className="cursor-pointer">
-              <Link href="/admin/properties/new">{t("addProperty")}</Link>
+              <Link href="/admin/properties/setup">{t("addProperty")}</Link>
             </Button>
           </CardContent>
         </Card>

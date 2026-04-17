@@ -185,6 +185,8 @@ export const updateLocation = async (
     gateCode?: string;
     parkingInfo?: string;
     buildingAccess?: string;
+    wifiName?: string | null;
+    wifiPassword?: string | null;
     quietHoursStart?: string;
     quietHoursEnd?: string;
     checkInTime?: string;
@@ -247,6 +249,46 @@ export const updateLocation = async (
   } catch (error) {
     console.error("Error updating location:", error);
     return { success: false, error: "Failed to update location" };
+  }
+};
+
+export const syncWifiToUnits = async (locationId: string) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    const location = await prisma.location.findFirst({
+      where: { id: locationId, hostId: session.user.id },
+      select: { wifiName: true, wifiPassword: true },
+    });
+
+    if (!location)
+      return { success: false, error: "Location not found or unauthorized" };
+
+    const units = await prisma.property.findMany({
+      where: { locationId },
+      select: { id: true },
+    });
+
+    if (units.length > 0) {
+      await prisma.$transaction(
+        units.map((u) =>
+          prisma.property.update({
+            where: { id: u.id },
+            data: {
+              wifiName: location.wifiName,
+              wifiPassword: location.wifiPassword,
+            },
+          })
+        )
+      );
+    }
+
+    revalidatePath("/admin");
+    return { success: true };
+  } catch (error) {
+    console.error("Error syncing WiFi to units:", error);
+    return { success: false, error: "Failed to sync WiFi" };
   }
 };
 
@@ -491,5 +533,80 @@ export const reorderLocations = async (orderedIds: string[]) => {
   } catch (error) {
     console.error("Error reordering locations:", error);
     return { success: false, error: "Failed to reorder" };
+  }
+};
+
+// Single-unit property creation — creates Location + Property in one step
+export const createSingleUnitProperty = async (data: {
+  name: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  checkInMethod?: string;
+  buildingAccess?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  wifiName?: string;
+  wifiPassword?: string;
+  squareMeters?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  beds?: number;
+  maxGuests?: number;
+}) => {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) throw new Error("Unauthorized");
+
+  try {
+    const locationSlug = generateSlug(data.name);
+
+    const location = await prisma.location.create({
+      data: {
+        name: data.name.trim(),
+        slug: locationSlug,
+        address: data.address || undefined,
+        city: data.city || undefined,
+        country: data.country || undefined,
+        checkInMethod: data.checkInMethod || undefined,
+        buildingAccess: data.buildingAccess || undefined,
+        checkInTime: data.checkInTime || undefined,
+        checkOutTime: data.checkOutTime || undefined,
+        isSingleUnit: true,
+        hostId: session.user.id,
+        bookingToken: nanoid(21),
+      },
+    });
+
+    try {
+      const propertySlug = generateSlug(data.name + " unit");
+
+      await prisma.property.create({
+        data: {
+          name: data.name.trim(),
+          slug: propertySlug,
+          wifiName: data.wifiName || undefined,
+          wifiPassword: data.wifiPassword || undefined,
+          checkInTime: data.checkInTime || undefined,
+          checkOutTime: data.checkOutTime || undefined,
+          squareMeters: data.squareMeters ?? undefined,
+          bedrooms: data.bedrooms ?? undefined,
+          bathrooms: data.bathrooms ?? undefined,
+          beds: data.beds ?? undefined,
+          maxGuests: data.maxGuests ?? undefined,
+          locationId: location.id,
+          hostId: session.user.id,
+        },
+      });
+    } catch (propertyError) {
+      // Cleanup orphaned location if property creation fails
+      await prisma.location.delete({ where: { id: location.id } });
+      throw propertyError;
+    }
+
+    revalidatePath("/admin");
+    return { success: true, location };
+  } catch (error) {
+    console.error("Error creating single-unit property:", error);
+    return { success: false, error: "Failed to create property" };
   }
 };

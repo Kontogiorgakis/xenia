@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "next-intl";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 
-import { PulsingDot } from "@/components/pulsing-dot";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -33,11 +32,7 @@ import {
 import { adminNavItems } from "@/lib/admin/config";
 import { Link, usePathname, useRouter } from "@/lib/i18n/navigation";
 
-interface AdminSidebarProps {
-  inboxUnreadCount?: number;
-}
-
-export const AdminSidebar = ({ inboxUnreadCount = 0 }: AdminSidebarProps) => {
+export const AdminSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
   const locale = useLocale();
@@ -103,12 +98,7 @@ export const AdminSidebar = ({ inboxUnreadCount = 0 }: AdminSidebarProps) => {
                           <span>{t(button.href)}</span>
                         </Link>
                       </SidebarMenuButton>
-                      {button.href === "inbox" && inboxUnreadCount > 0 && (
-                        <SidebarMenuBadge className="bg-transparent p-0">
-                          <PulsingDot />
-                        </SidebarMenuBadge>
-                      )}
-                      {button.badge && !(button.href === "inbox" && inboxUnreadCount > 0) && (
+                      {button.badge && (
                         <SidebarMenuBadge className="text-[10px] text-muted-foreground">
                           {button.badge === "soon" ? "Soon" : button.badge}
                         </SidebarMenuBadge>

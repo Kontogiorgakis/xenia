@@ -4,9 +4,11 @@ import {
   ArrowRight,
   Building2,
   Globe,
+  ImageIcon,
   Info,
   MapPin,
   Save,
+  X,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
@@ -26,11 +28,10 @@ import { createLocation, updateLocation } from "@/server_actions/locations";
 
 import { AmenitiesTab } from "./location-tabs/amenities-tab";
 import { BookingSettingsTab } from "./location-tabs/booking-settings-tab";
-import { PhotosTab } from "./location-tabs/photos-tab";
 import { RulesTab } from "./location-tabs/rules-tab";
 import { WizardSteps } from "./wizard-steps";
 
-const TAB_KEYS = ["basic", "photos", "facilities", "houseRules", "bookingSettings"] as const;
+const TAB_KEYS = ["basic", "facilities", "houseRules", "bookingSettings"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
 interface LocationFormProps {
@@ -55,6 +56,7 @@ export function LocationForm({ initialData }: LocationFormProps) {
   const [country, setCountry] = useState(initialData?.country ?? "Greece");
   const [description, setDescription] = useState(initialData?.description ?? "");
   const [slug, setSlug] = useState(initialData?.slug ?? "");
+  const [coverPhoto, setCoverPhoto] = useState(initialData?.coverPhoto ?? "");
 
   const handleNameBlur = () => {
     if (!isEditing && name) setSlug(generateSlug(name));
@@ -70,6 +72,7 @@ export function LocationForm({ initialData }: LocationFormProps) {
         city: city || undefined,
         country: country || undefined,
         description: description.trim() || null,
+        coverPhoto: coverPhoto.trim() || null,
       };
 
       if (isEditing) {
@@ -242,6 +245,47 @@ export function LocationForm({ initialData }: LocationFormProps) {
                 {t("basic.descriptionHint")}
               </p>
             </div>
+
+            {/* Cover photo */}
+            <div className="space-y-2">
+              <Label>
+                <ImageIcon className="inline size-3.5" /> {t("photos.cover")}
+              </Label>
+              <div className="relative aspect-video w-full overflow-hidden rounded-2xl border border-dashed border-border/60 bg-muted/30">
+                {coverPhoto ? (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={coverPhoto}
+                      alt="Cover"
+                      className="size-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCoverPhoto("")}
+                      className="absolute right-3 top-3 flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
+                      aria-label={t("photos.removePhoto")}
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </>
+                ) : (
+                  <div className="flex size-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                    <ImageIcon className="size-12" />
+                    <p className="text-xs">{t("photos.noPhotos")}</p>
+                  </div>
+                )}
+              </div>
+              <Input
+                placeholder="https://..."
+                value={coverPhoto}
+                onChange={(e) => setCoverPhoto(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {t("photos.s3Note")}
+              </p>
+            </div>
+
             {slug && (
               <p className="text-sm text-muted-foreground">
                 {t("basic.guestUrl")}:{" "}
@@ -251,19 +295,6 @@ export function LocationForm({ initialData }: LocationFormProps) {
               </p>
             )}
           </div>
-        </TabsContent>
-
-        <TabsContent
-          value="photos"
-          className="rounded-2xl border border-border/40 bg-card p-6 shadow-xenia sm:p-8"
-        >
-          {initialData && (
-            <PhotosTab
-              locationId={initialData.id}
-              initialCoverPhoto={initialData.coverPhoto}
-              initialPhotos={initialData.photos}
-            />
-          )}
         </TabsContent>
 
         <TabsContent
@@ -294,6 +325,8 @@ export function LocationForm({ initialData }: LocationFormProps) {
                 gateCode: initialData.gateCode,
                 parkingInfo: initialData.parkingInfo,
                 buildingAccess: initialData.buildingAccess,
+                wifiName: initialData.wifiName,
+                wifiPassword: initialData.wifiPassword,
                 emergencyPhone: initialData.emergencyPhone,
                 localTips: initialData.localTips,
                 smokingPolicy: initialData.smokingPolicy,
