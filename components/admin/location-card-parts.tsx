@@ -5,6 +5,9 @@ import { ExternalLink, GripVertical } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { UnitStatus } from "@/lib/utils/unit-status";
+import { STATUS_CONFIG } from "@/lib/utils/unit-status";
 
 export function DragHandle({ dragControls }: { dragControls: DragControls }) {
   return (
@@ -16,6 +19,42 @@ export function DragHandle({ dragControls }: { dragControls: DragControls }) {
     >
       <GripVertical className="size-4" />
     </button>
+  );
+}
+
+export function StatusPill({
+  status,
+  size = "md",
+}: {
+  status: UnitStatus;
+  size?: "sm" | "md";
+}) {
+  const t = useTranslations("Admin.properties");
+  const config = STATUS_CONFIG[status];
+  const isLive =
+    status === "occupied" ||
+    status === "arriving_today" ||
+    status === "departing_today" ||
+    status === "back_to_back";
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border font-medium",
+        size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-2.5 py-1 text-xs",
+        config.bgColor,
+        "border-white/50 dark:border-white/10"
+      )}
+    >
+      <span
+        className={cn(
+          "shrink-0 rounded-full",
+          size === "sm" ? "size-1.5" : "size-2",
+          config.dotColor,
+          isLive && "animate-pulse"
+        )}
+      />
+      <span>{t(config.label)}</span>
+    </span>
   );
 }
 

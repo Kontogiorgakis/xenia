@@ -3,17 +3,12 @@
 import { motion } from "framer-motion";
 import { Home } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 
+import { StatusPill } from "@/components/admin/location-card-parts";
 import { PropertyActions } from "@/components/admin/property-actions";
 import { PropertySpecs } from "@/components/admin/property-specs";
-import { cn } from "@/lib/utils";
-import { getUnitStatus, STATUS_CONFIG } from "@/lib/utils/unit-status";
-
-import {
-  ReservationDetail,
-  ReservationDetailSheet,
-} from "./reservation-detail-sheet";
+import { UpcomingReservations } from "@/components/admin/upcoming-reservations";
+import { getUnitStatus } from "@/lib/utils/unit-status";
 
 interface Reservation {
   id: string;
@@ -45,117 +40,68 @@ interface UnitMiniCardProps {
   index: number;
 }
 
-function formatShort(date: Date, locale: string): string {
-  return new Date(date).toLocaleDateString(locale, {
-    day: "numeric",
-    month: "short",
-  });
-}
-
 export function UnitMiniCard({ property, locale, index }: UnitMiniCardProps) {
   const tp = useTranslations("Admin.properties");
-  const { status, activeReservation } = getUnitStatus(property.reservations);
-  const config = STATUS_CONFIG[status];
-  const [selected, setSelected] = useState<ReservationDetail | null>(null);
-
-  const isUrgent =
-    status === "arriving_today" ||
-    status === "departing_today" ||
-    status === "back_to_back";
+  const { status } = getUnitStatus(property.reservations);
 
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.03, duration: 0.2 }}
-        className="flex flex-col gap-3 overflow-hidden rounded-xl border border-border/40 bg-card shadow-xenia"
-      >
-        {/* Status bar */}
-        <div className={cn("h-1 w-full", config.barColor)} />
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.03, duration: 0.2 }}
+      className="flex flex-col gap-3 overflow-hidden rounded-xl border border-border/40 bg-card shadow-xenia"
+    >
+      <div className="flex flex-col gap-3 p-4">
+        {/* Status pill + actions */}
+        <div className="flex items-start justify-between gap-2">
+          <StatusPill status={status} size="sm" />
+          <PropertyActions
+            propertyId={property.id}
+            propertyName={property.name}
+            compact
+          />
+        </div>
 
-        <div className="flex flex-col gap-3 px-4 pb-4">
-          {/* Header */}
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Home className="size-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                <span
-                  className={cn(
-                    "size-2 shrink-0 rounded-full",
-                    config.dotColor,
-                    (status === "occupied" || isUrgent) && "animate-pulse"
-                  )}
-                />
-                <span className="truncate text-sm font-medium">
-                  {property.name}
-                </span>
-              </div>
-              <PropertySpecs
-                squareMeters={property.squareMeters}
-                bedrooms={property.bedrooms}
-                bathrooms={property.bathrooms}
-                maxGuests={property.maxGuests}
-              />
-            </div>
-            {property.nightlyRate != null && (
-              <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                €{property.nightlyRate}/{tp("night")}
-              </span>
-            )}
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Home className="size-4" />
           </div>
-
-          {/* Status / active reservation */}
-          {activeReservation ? (
-            <button
-              type="button"
-              onClick={() => {
-                const r = property.reservations.find(
-                  (res) => res.id === activeReservation.id
-                );
-                if (r) setSelected({ ...r, propertyName: property.name });
-              }
-              }
-              className={cn(
-                "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition hover:brightness-95 cursor-pointer",
-                config.bgColor
-              )}
-            >
-              <span className={cn("size-1.5 shrink-0 rounded-full", config.dotColor)} />
-              <span className="min-w-0 flex-1 truncate text-xs font-medium">
-                {activeReservation.guestName}
-              </span>
-              <span className="shrink-0 text-[10px] font-semibold text-muted-foreground">
-                {formatShort(activeReservation.checkIn, locale)} –{" "}
-                {formatShort(activeReservation.checkOut, locale)}
-              </span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 rounded-lg bg-green-50 px-2.5 py-1.5 dark:bg-green-950/20">
-              <span className="size-1.5 shrink-0 rounded-full bg-green-500" />
-              <span className="text-xs font-medium text-green-700 dark:text-green-400">
-                {tp("statusAvailable")}
-              </span>
-            </div>
-          )}
-
-          {/* Quick actions */}
-          <div className="flex items-center justify-end">
-            <PropertyActions
-              propertyId={property.id}
-              propertyName={property.name}
-              compact
+          <div className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-medium">
+              {property.name}
+            </span>
+            <PropertySpecs
+              squareMeters={property.squareMeters}
+              bedrooms={property.bedrooms}
+              bathrooms={property.bathrooms}
+              maxGuests={property.maxGuests}
             />
           </div>
+          {property.nightlyRate != null && (
+            <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+              €{property.nightlyRate}/{tp("night")}
+            </span>
+          )}
         </div>
-      </motion.div>
 
-      <ReservationDetailSheet
-        reservation={selected}
-        onClose={() => setSelected(null)}
-      />
-    </>
+        {/* Reservations */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span>{tp("reservations")}</span>
+            <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-bold text-foreground">
+              {property._count.reservations}
+            </span>
+          </div>
+          <UpcomingReservations
+            reservations={property.reservations}
+            propertyName={property.name}
+            locale={locale}
+            compact
+            activeStatus={status}
+          />
+        </div>
+      </div>
+    </motion.div>
   );
 }

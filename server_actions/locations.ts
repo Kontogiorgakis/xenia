@@ -15,7 +15,9 @@ export const getLocations = async (includeArchived = false) => {
     return { success: false, error: "Unauthorized", locations: [] };
 
   try {
+    // Use start-of-today so reservations departing today stay visible all day
     const now = new Date();
+    now.setHours(0, 0, 0, 0);
     const locations = await prisma.location.findMany({
       where: {
         hostId: session.user.id,

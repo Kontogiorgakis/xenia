@@ -72,41 +72,35 @@ export function getUnitStatus(
 
 export const STATUS_CONFIG: Record<
   UnitStatus,
-  { dotColor: string; barColor: string; bgColor: string; label: string }
+  { dotColor: string; bgColor: string; label: string }
 > = {
   available: {
     dotColor: "bg-green-500",
-    barColor: "bg-green-400",
     bgColor: "bg-green-50 dark:bg-green-950/20",
     label: "statusAvailable",
   },
   occupied: {
     dotColor: "bg-primary",
-    barColor: "bg-primary",
     bgColor: "bg-blue-50 dark:bg-blue-950/20",
     label: "statusOccupied",
   },
   arriving_today: {
     dotColor: "bg-red-500",
-    barColor: "bg-red-500",
     bgColor: "bg-red-50 dark:bg-red-950/20",
     label: "statusArrivingToday",
   },
   departing_today: {
     dotColor: "bg-red-500",
-    barColor: "bg-red-500",
     bgColor: "bg-red-50 dark:bg-red-950/20",
     label: "statusDepartingToday",
   },
   arriving_soon: {
     dotColor: "bg-blue-600",
-    barColor: "bg-blue-400",
     bgColor: "bg-blue-50 dark:bg-blue-950/20",
     label: "statusArrivingSoon",
   },
   back_to_back: {
     dotColor: "bg-orange-500",
-    barColor: "bg-orange-500",
     bgColor: "bg-orange-50 dark:bg-orange-950/20",
     label: "statusBackToBack",
   },

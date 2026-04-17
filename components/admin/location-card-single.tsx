@@ -8,6 +8,7 @@ import { AmenityPills } from "@/components/admin/amenity-pills";
 import {
   BookingPageButton,
   DragHandle,
+  StatusPill,
 } from "@/components/admin/location-card-parts";
 import { PropertySpecs } from "@/components/admin/property-specs";
 import type { LocationCard } from "@/components/admin/sortable-properties-list";
@@ -15,8 +16,7 @@ import { UpcomingReservations } from "@/components/admin/upcoming-reservations";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "@/lib/i18n/navigation";
-import { cn } from "@/lib/utils";
-import { getUnitStatus, STATUS_CONFIG } from "@/lib/utils/unit-status";
+import { getUnitStatus } from "@/lib/utils/unit-status";
 
 interface LocationCardSingleProps {
   location: LocationCard;
@@ -35,32 +35,18 @@ export function LocationCardSingle({
   const unit = location.properties[0];
   if (!unit) return null;
 
-  const { status, activeReservation } = getUnitStatus(unit.reservations);
-  const config = STATUS_CONFIG[status];
+  const { status } = getUnitStatus(unit.reservations);
 
   return (
     <Card className="overflow-hidden">
-      {/* Status bar */}
-      <div className={cn("h-1 w-full", config.barColor)} />
-
       <CardHeader className="p-0">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between sm:p-6">
           <div className="flex items-start gap-3 p-6 sm:p-0">
             <DragHandle dragControls={dragControls} />
-            <div className="min-w-0">
+            <div className="min-w-0 space-y-1.5">
+              <StatusPill status={status} />
               <CardTitle className="flex items-center gap-2 truncate">
                 <Home className="size-4 shrink-0 text-primary" />
-                <span
-                  className={cn(
-                    "size-2 shrink-0 rounded-full",
-                    config.dotColor,
-                    (status === "occupied" ||
-                      status === "arriving_today" ||
-                      status === "departing_today" ||
-                      status === "back_to_back") &&
-                      "animate-pulse"
-                  )}
-                />
                 {location.name}
               </CardTitle>
               <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -117,31 +103,6 @@ export function LocationCardSingle({
           {/* Amenity pills */}
           <AmenityPills amenitiesJson={location.amenities} />
 
-          {/* Status indicator */}
-          {activeReservation ? (
-            <div
-              className={cn(
-                "flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium",
-                config.bgColor
-              )}
-            >
-              <span
-                className={cn("size-1.5 shrink-0 rounded-full", config.dotColor)}
-              />
-              <span>{tp(config.label)}</span>
-              <span className="text-muted-foreground">
-                — {activeReservation.guestName}
-              </span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 rounded-lg bg-green-50 px-2.5 py-1.5 dark:bg-green-950/20">
-              <span className="size-1.5 shrink-0 rounded-full bg-green-500" />
-              <span className="text-xs font-medium text-green-700 dark:text-green-400">
-                {tp("statusAvailable")}
-              </span>
-            </div>
-          )}
-
           {/* Reservations */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -155,6 +116,7 @@ export function LocationCardSingle({
               propertyName={unit.name}
               locale={locale}
               compact
+              activeStatus={status}
             />
           </div>
 
